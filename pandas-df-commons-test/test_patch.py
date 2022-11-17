@@ -12,4 +12,4 @@ class TestExtensionFunctions(TestCase):
 
     def test_extensions(self):
         df = pd.DataFrame({})
-        self.assertEquals(str(type(df.X)), "<class 'pandas_df_commons._extender.<locals>.Extender'>")
+        self.assertEqual(str(type(df.X)), "<class 'pandas_df_commons._extender.<locals>.Extender'>")

@@ -6,9 +6,6 @@ import logging
 import numpy as np
 import pandas as pd
 
-from pandas.core.base import PandasObject
-
-
 _log = logging.getLogger(__name__)
 _log.debug(f"numpy version {np.__version__}")
 _log.debug(f"pandas version {pd.__version__}")

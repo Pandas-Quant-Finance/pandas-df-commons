@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def cumpct_change(df):
     return ((df.pct_change().fillna(0) + 1).cumprod() - 1)
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
+
+import logging
 from functools import wraps
 from typing import Dict, Callable, Any, T
 
 import numpy as np
 import pandas as pd
-import logging
 
 from pandas_df_commons.indexing import unique_level_values
 from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index

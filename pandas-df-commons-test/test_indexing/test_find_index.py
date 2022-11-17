@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from pandas_df_commons.indexing.find_index import get_columns
 
@@ -33,9 +33,9 @@ class TestFindIndex(TestCase):
             keys=["A", "B"]
         )
 
-        self.assertEquals(get_columns(df, "~/.+lo.+/").shape[1], 4)
-        self.assertEquals(get_columns(df, "~/A/.*[en]$/").shape[1], 2)
-        self.assertEquals(get_columns(df, "open").shape[1], 2)
-        self.assertEquals(get_columns(df, "B").shape[1], 4)
-        self.assertEquals(get_columns(df, ["B", "A"]).shape[1], 8)
+        self.assertEqual(get_columns(df, "~/.+lo.+/").shape[1], 4)
+        self.assertEqual(get_columns(df, "~/A/.*[en]$/").shape[1], 2)
+        self.assertEqual(get_columns(df, "open").shape[1], 2)
+        self.assertEqual(get_columns(df, "B").shape[1], 4)
+        self.assertEqual(get_columns(df, ["B", "A"]).shape[1], 8)
         self.assertListEqual(get_columns(df, ["A", "B"]).columns.tolist(), df.columns.tolist())
