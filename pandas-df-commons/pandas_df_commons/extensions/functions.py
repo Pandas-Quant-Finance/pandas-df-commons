@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def cumpct_change(df):
-    return ((df.pct_change() + 1).cumprod() - 1)
+    return ((df.pct_change().fillna(0) + 1).cumprod() - 1)
 
 
 def cumapply(df, func: callable, start_value=None, **kwargs):

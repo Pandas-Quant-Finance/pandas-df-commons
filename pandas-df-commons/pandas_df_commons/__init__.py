@@ -37,7 +37,14 @@ def _extender(df):
 
 # IMPORTANT call this function after the import
 def monkey_patch_dataframe(extender='X'):
-    setattr(PandasObject, extender, property(extender))
+    from pandas.core.base import PandasObject
+
+    existing = getattr(PandasObject, extender, None)
+    if existing is not None:
+        if not str(type(existing)) == "<class 'pandas_df_commons._extender.<locals>.Extender'>":
+            raise ValueError(f"field already exists as {type(existing)}")
+
+    setattr(PandasObject, extender, property(lambda self: _extender(self)))
     setattr(pd.DataFrame, "to_frame", lambda self: self)
 
     #setattr(pd.DataFrame, "flatten_columns", flatten_multi_column_index)
@@ -47,3 +54,5 @@ def monkey_patch_dataframe(extender='X'):
     #setattr(pd.Series, "add_multi_index", lambda self, *args, **kwargs: add_multi_index(self, *args, **kwargs))
     #
     #setattr(pd.MultiIndex, "unique_level", lambda self, *args: unique_level(self, *args))
+
+
