@@ -89,11 +89,19 @@ def get_columns(frame: pd.DataFrame | pd.Series, keys) -> pd.DataFrame | pd.Seri
                         if col in column_tuple:
                             search_keys.append(column_tuple)
 
+                        # could be regex ~/<regex>/
+                        elif isinstance(col, str) and (col.startswith("~") and col[1] == col[-1] and len(col) > 3):
+                            column_matcher = "/".join([str(c).strip('\"') for c in column_tuple])
+                            cregex = col[2:-1]
+                            if re.compile(cregex).match(column_matcher):
+                                search_keys.append(column_tuple)
+
                 # could be regex ~/<regex>/
                 elif isinstance(col, str) and (col.startswith("~") and col[1] == col[-1] and len(col) > 3):
-                    for column_any in frame.columns.tolist():
-                        if re.compile(col).match(str(column_any)):
-                            search_keys.append(column_any)
+                    cregex = col[2:-1]
+                    for c in frame.columns.tolist():
+                        if re.compile(cregex).match(str(c).strip('\"')):
+                            search_keys.append(c)
 
                 else:
                     found = False
@@ -135,8 +143,10 @@ def get_columns(frame: pd.DataFrame | pd.Series, keys) -> pd.DataFrame | pd.Seri
             names.append(None)
         # from here, col can only be a column label
         else:
-            arrays.append(frame[col]._values)
-            names.append(col)
+            sub_frame = frame[[col]]
+            sub_values = sub_frame._values
+            arrays.extend(sub_values.T)
+            names.extend(sub_frame.columns.tolist())
 
         if len(arrays[-1]) != len(frame):
             # check newest element against length of calling frame, since
@@ -148,4 +158,9 @@ def get_columns(frame: pd.DataFrame | pd.Series, keys) -> pd.DataFrame | pd.Seri
 
     # just instead of an index we return a DataFrame or Series
     df = pd.DataFrame(arrays, index=names, columns=frame.index).T
-    return df if df.shape[1] > 1 else df[df.columns[0]]
+    if df.shape[1] > 1:
+        return df
+    elif len(df.columns) > 0:
+        return df[df.columns[0]]
+    else:
+        return pd.DataFrame({}, index=df.index)
