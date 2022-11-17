@@ -1,2 +1,4 @@
 ../_old_commons/
 __pycache__/
+dist/
+*.egg-info

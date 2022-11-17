@@ -1,5 +1,5 @@
 """Augment pandas DataFrame with commonly used methods and utilities"""
-__version__ = '0.1.0'
+__version__ = open(f"{__file__.replace('__init__.py', '')}VERSION").read()
 
 import logging
 
