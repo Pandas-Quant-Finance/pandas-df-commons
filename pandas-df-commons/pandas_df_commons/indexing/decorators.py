@@ -7,9 +7,9 @@ from typing import Dict, Callable, Any, T
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.indexing import unique_level_values
-from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index
-from pandas_ta.pandas_ta_utils.index_utils import same_columns_after_level
+from pandas_df_commons.indexing._utils import _Utils
+from pandas_df_commons._utils.multiprocessing import blocking_parallel
+
 
 _log = logging.getLogger(__name__)
 
@@ -38,27 +38,58 @@ def convert_series_as_data_frame(func):
     return to_dataframe
 
 
+def for_each_top_level_row_and_column_parallel(
+        parallel=False,
+        row_aggregator=
+        _Utils.row_agg,
+        column_aggregator=_Utils.col_agg
+):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(df, *args, **kwargs):
+            tl_rows = _Utils.get_top_level_rows(df)
+            tl_columns = _Utils.get_top_level_columns(df)
+            nr_rows = len(tl_rows) if tl_rows else 0
+            nr_columns = len(tl_columns) if tl_columns else 0
+            pr = nr_rows > nr_columns
+
+            @for_each_top_level_row_aggregate(row_aggregator, parallel=parallel and pr)
+            @for_each_top_level_column_aggregate(column_aggregator, parallel=parallel and not pr)
+            def executor(df, *args, **kwargs):
+                return func(df, *args, **kwargs)
+
+            return executor(df, *args, **kwargs)
+
+        return wrapper
+    return decorator
+
+
 def for_each_top_level_column(func):
-    def agg(results, level):
-        groups = [add_to_multi_index(res, group, inplace=True, level=level) for group, res in results.items()]
-        return pd.concat(groups, axis=1)
-
-    return for_each_top_level_column_aggregate(agg)(func)
+    return for_each_top_level_column_aggregate(_Utils.col_agg, parallel=False)(func)
 
 
-def for_each_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int], T], level=0):
+def for_each_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int], T] = _Utils.col_agg, level=0, parallel=False):
     def decorator(func):
         @wraps(func)
         def exec_on_each_tl_column(df: pd.DataFrame, *args, **kwargs):
-            if df.ndim > 1 and isinstance(df.columns, pd.MultiIndex):
-                # check if the shape of the 2nd level is identical else threat as if not multi index
-                if same_columns_after_level(df, level):
-                    top_level = unique_level_values(df, level, axis=1)
-                    results = {group: func(df.xs(group, axis=1, level=level), *args, **kwargs) for group in top_level}
-                    return aggregator(results, level)
+            top_level = _Utils.get_top_level_columns(df, level=level)
+            if top_level:
+                if parallel:
+                    # multiProcessing
+                    results = dict(
+                        zip(
+                            top_level,
+                            blocking_parallel(
+                                lambda sub_df: func(sub_df, *args, **kwargs),
+                                [df.xs(tl, axis=1, level=level).copy() for tl in top_level]
+                            )
+                        )
+                    )
                 else:
-                    _log.warning(f"columns in further levels do not follow the same structure! Treat as normal Index")
-                    return func(df, *args, **kwargs)
+                    # sequential
+                    results = {group: func(df.xs(group, axis=1, level=level), *args, **kwargs) for group in top_level}
+
+                return aggregator(results, level)
             else:
                 return func(df, *args, **kwargs)
 
@@ -67,23 +98,32 @@ def for_each_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int]
 
 
 def for_each_top_level_row(func):
-    def agg(results: Dict):
-        return pd.concat(results.values(), keys=results.keys(), axis=0)
-
-    return for_each_top_level_row_aggregate(agg)(func)
+    return for_each_top_level_row_aggregate(_Utils.row_agg)(func)
 
 
-def for_each_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T]):
+def for_each_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = _Utils.row_agg, parallel=False):
     def decorator(func):
         @wraps(func)
         def exec_on_each_tl_row(df: pd.DataFrame, *args, **kwargs):
-            if isinstance(df.index, pd.MultiIndex):
-                top_level = unique_level_values(df, level=0, axis=0)
-                if len(top_level) > 1:
-                    results = {group: func(df.loc[group], *args, **kwargs) for group in top_level}
-                    return aggregator(results)
+            top_level = _Utils.get_top_level_rows(df)
+
+            if top_level:
+                # multiProcessing
+                if parallel:
+                    results = dict(
+                        zip(
+                            top_level,
+                            blocking_parallel(
+                               lambda sub_df: func(sub_df, *args, **kwargs),
+                               [df.loc[tl] for tl in top_level]
+                            )
+                        )
+                    )
                 else:
-                    return func(df, *args, **kwargs)
+                    # sequential
+                    results = {group: func(df.loc[group], *args, **kwargs) for group in top_level}
+
+                return aggregator(results)
             else:
                 return func(df, *args, **kwargs)
 
@@ -123,3 +163,4 @@ def rename_with_parameters(function_name, parameter_names, output_names=None):
             return df
         return wrapper
     return decorator
+

@@ -8,6 +8,7 @@ But also some missing methods get extended like:
 
 * cumpct_change
 * cumapply
+* rolling apply for multiple return values optionally parallel 
 
 For more use cases check the notebooks in the [examples][gh1] directory.
 

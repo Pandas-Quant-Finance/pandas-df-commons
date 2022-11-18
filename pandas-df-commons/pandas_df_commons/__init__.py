@@ -2,9 +2,11 @@
 __version__ = open(f"{__file__.replace('__init__.py', '')}VERSION").read()
 
 import logging
+from typing import Callable
 
 import numpy as np
 import pandas as pd
+
 
 _log = logging.getLogger(__name__)
 _log.debug(f"numpy version {np.__version__}")
@@ -13,7 +15,7 @@ _log.debug(f"pandas version {pd.__version__}")
 
 def _extender(df):
     import pandas_df_commons.indexing as indexing
-    from pandas_df_commons.extensions.functions import cumapply, cumpct_change
+    from pandas_df_commons.extensions.functions import cumapply, cumpct_change, rolling_apply
 
     class Extender(object):
 
@@ -29,6 +31,10 @@ def _extender(df):
         def cumapply(self, func: callable, start_value=None, **kwargs):
             return cumapply(self.df, func, start_value, **kwargs)
 
+        def rolling_apply(self, period: int, func: Callable[[pd.DataFrame], pd.DataFrame], parallel=False):
+            return rolling_apply(self.df, period, func, parallel)
+
+
     return Extender(df)
 
 
@@ -38,8 +44,9 @@ def monkey_patch_dataframe(extender='X'):
 
     existing = getattr(PandasObject, extender, None)
     if existing is not None:
-        if not str(type(existing)) == "<class 'pandas_df_commons._extender.<locals>.Extender'>":
-            raise ValueError(f"field already exists as {type(existing)}")
+        if not isinstance(existing, property)\
+        or not str(existing.fget(None)).startswith("<pandas_df_commons._extender.<locals>.Extender object"):
+            raise ValueError(f"field already exists as {existing.fget(None)}")
 
     setattr(PandasObject, extender, property(lambda self: _extender(self)))
     setattr(pd.DataFrame, "to_frame", lambda self: self)
