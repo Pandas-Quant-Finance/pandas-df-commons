@@ -3,7 +3,8 @@ __version__ = open("pandas-df-commons/pandas_df_commons/VERSION").read()
 import os
 import re
 
-from setuptools import setup, find_packages
+from distutils.core import setup
+from setuptools import find_packages
 from setuptools.command.sdist import sdist
 
 URL = 'https://github.com/Pandas-Quant-Finance/pandas-df-commons'
@@ -40,7 +41,8 @@ setup(
     version=__version__,
     author='KIC',
     author_email='',
-    packages=find_packages(),
+    package_dir={'': NAME},
+    packages=find_packages(where=NAME),
     scripts=[],
     url=f'{URL}/{NAME}',
     license='MIT',
@@ -61,7 +63,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
     ],
-    keywords=['pandas', 'ml', 'util', 'quant'],
+    keywords=['pandas', 'df', 'commons'],
     cmdclass={
         'sdist': SDist
     },
