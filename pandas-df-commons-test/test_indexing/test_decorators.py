@@ -3,8 +3,8 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.indexing.decorators import for_each_top_level_column, for_each_top_level_row, \
-    for_each_top_level_row_and_column_parallel
+from pandas_df_commons.indexing.decorators import foreach_top_level_column, foreach_top_level_row, \
+    foreach_top_level_row_and_column, foreach_column
 
 
 def _frame(l):
@@ -18,7 +18,7 @@ class TestDecorators(TestCase):
         frames = [_frame(100) for _ in keys]
         df = pd.concat(frames, axis=1, keys=keys)
 
-        @for_each_top_level_column
+        @foreach_top_level_column
         def compute_parallel(df, y, z):
             return compute(df, y, z)
 
@@ -42,7 +42,7 @@ class TestDecorators(TestCase):
         frames = [_frame(100) for _ in keys]
         df = pd.concat(frames, axis=0, keys=keys)
 
-        @for_each_top_level_row
+        @foreach_top_level_row
         def compute_parallel(df, y, z):
             return compute(df, y, z)
 
@@ -73,7 +73,7 @@ class TestDecorators(TestCase):
         def compute(df, y, z):
             return df.pct_change().fillna(y) + z
 
-        @for_each_top_level_row_and_column_parallel(parallel=True)
+        @foreach_top_level_row_and_column(parallel=True)
         def compute_parallel(df, y, z):
             return compute(df, y, z)
 
@@ -82,3 +82,14 @@ class TestDecorators(TestCase):
         for x in keys:
             for y in keys:
                 pd.testing.assert_frame_equal(dfres.loc[x, y], compute(df.loc[x, y],  0.1, 12))
+
+    def test_for_each_column(self):
+        keys = ["A", "B", "C"]
+        frames = [_frame(100) for _ in keys]
+        df = pd.concat(frames, axis=1, keys=keys)
+
+        @foreach_column
+        def compute(x):
+            return x
+
+        pd.testing.assert_frame_equal(df, compute(df))

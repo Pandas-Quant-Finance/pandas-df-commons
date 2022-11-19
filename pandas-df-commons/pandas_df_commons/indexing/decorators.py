@@ -14,7 +14,7 @@ from pandas_df_commons._utils.multiprocessing import blocking_parallel
 _log = logging.getLogger(__name__)
 
 
-def for_each_column(func):
+def foreach_column(func):
     @wraps(func)
     def exec_on_each_column(df: pd.DataFrame, *args, **kwargs):
         if df.ndim > 1 and df.shape[1] > 0:
@@ -38,7 +38,7 @@ def convert_series_as_data_frame(func):
     return to_dataframe
 
 
-def for_each_top_level_row_and_column_parallel(parallel=False, row_aggregator=row_agg, column_aggregator=col_agg):
+def foreach_top_level_row_and_column(parallel=False, row_aggregator=row_agg, column_aggregator=col_agg):
     def decorator(func):
         @wraps(func)
         def wrapper(df, *args, **kwargs):
@@ -48,8 +48,8 @@ def for_each_top_level_row_and_column_parallel(parallel=False, row_aggregator=ro
             nr_columns = len(tl_columns) if tl_columns else 0
             pr = nr_rows > nr_columns
 
-            @for_each_top_level_row_aggregate(row_aggregator, parallel=parallel and pr)
-            @for_each_top_level_column_aggregate(column_aggregator, parallel=parallel and not pr)
+            @foreach_top_level_row_aggregate(row_aggregator, parallel=parallel and pr)
+            @foreach_top_level_column_aggregate(column_aggregator, parallel=parallel and not pr)
             def executor(df, *args, **kwargs):
                 return func(df, *args, **kwargs)
 
@@ -59,11 +59,11 @@ def for_each_top_level_row_and_column_parallel(parallel=False, row_aggregator=ro
     return decorator
 
 
-def for_each_top_level_column(func):
-    return for_each_top_level_column_aggregate(col_agg, parallel=False)(func)
+def foreach_top_level_column(func):
+    return foreach_top_level_column_aggregate(col_agg, parallel=False)(func)
 
 
-def for_each_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int], T] = col_agg, level=0, parallel=False):
+def foreach_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int], T] = col_agg, level=0, parallel=False):
     def decorator(func):
         @wraps(func)
         def exec_on_each_tl_column(df: pd.DataFrame, *args, **kwargs):
@@ -92,11 +92,11 @@ def for_each_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int]
     return decorator
 
 
-def for_each_top_level_row(func):
-    return for_each_top_level_row_aggregate(row_agg)(func)
+def foreach_top_level_row(func):
+    return foreach_top_level_row_aggregate(row_agg)(func)
 
 
-def for_each_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = row_agg, parallel=False):
+def foreach_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = row_agg, parallel=False):
     def decorator(func):
         @wraps(func)
         def exec_on_each_tl_row(df: pd.DataFrame, *args, **kwargs):
