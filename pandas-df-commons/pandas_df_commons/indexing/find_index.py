@@ -157,7 +157,12 @@ def get_columns(frame: pd.DataFrame | pd.Series, keys) -> pd.DataFrame | pd.Seri
             )
 
     # just instead of an index we return a DataFrame or Series
-    df = pd.DataFrame(arrays, index=names, columns=frame.index).T
+    df = pd.DataFrame(
+        arrays,
+        index=pd.MultiIndex.from_tuples(names) if isinstance(frame.columns, pd.MultiIndex) and len(names) > 1 else names,
+        columns=frame.index
+    ).T
+
     if df.shape[1] > 1:
         return df
     elif len(df.columns) > 0:

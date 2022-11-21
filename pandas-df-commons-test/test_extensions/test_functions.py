@@ -23,11 +23,13 @@ class TestExtensionFunctions(TestCase):
         df = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)})
         res = rolling_apply(df, 3, lambda x: x.sum().sum())
         res1 = rolling_apply(df, 3, lambda x: x.sum(axis=1))
+        res4 = rolling_apply(df, 3, lambda x: x.sum(axis=0))
         res2 = rolling_apply(df, 3, lambda x: x * 2)
         res3 = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]))
 
         self.assertEquals(res.shape, (8, 1))
-        self.assertEquals(res1.shape, (24, ))
+        self.assertEquals(res1.shape, (8, 3))
+        self.assertEquals(res4.shape, (8, 2))
         self.assertEquals(res2.shape, (24, 2))
         self.assertEquals(res3.shape, (48, 2))
 
