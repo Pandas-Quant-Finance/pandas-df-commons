@@ -3,7 +3,7 @@ from unittest import TestCase
 import pandas as pd
 
 from pandas_df_commons.indexing._utils import same_columns_after_level
-from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index
+from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index, get_top_level_of_multi_index
 
 
 class TestMultiIndexUtils(TestCase):
@@ -25,3 +25,20 @@ class TestMultiIndexUtils(TestCase):
 
         self.assertTrue(same_columns_after_level(df1))
         self.assertFalse(same_columns_after_level(df2))
+
+    def test_get_top_level_values(self):
+        df = pd.DataFrame({"a": range(3), "b": range(3)})
+
+        self.assertEquals(get_top_level_of_multi_index(df), (None, None))
+        self.assertEquals(get_top_level_of_multi_index(pd.concat([df, df], axis=1, keys=[1, 2])), (None, [1, 2]))
+        self.assertEquals(get_top_level_of_multi_index(pd.concat([df, df], axis=0, keys=[1, 2])), ([1, 2], None))
+        self.assertEquals(
+            get_top_level_of_multi_index(pd.concat([
+                pd.concat([df, df], axis=1, keys=[3, 4]),
+                pd.concat([df, df], axis=1, keys=[3, 4]),
+            ], axis=0, keys=[1, 2])),
+            ([1, 2], [3, 4])
+        )
+
+        # test corner case series
+        self.assertEquals(get_top_level_of_multi_index(pd.concat([df["a"], df["a"]], axis=0, keys=[1, 2])), [1, 2])

@@ -5,6 +5,22 @@ from collections import OrderedDict
 import pandas as pd
 
 
+def get_top_level_of_multi_index(df: pd.DataFrame):
+    def get_top_level_columns():
+        if hasattr(df, "columns") and isinstance(df.columns, pd.MultiIndex):
+            return unique_level_values(df, axis=1)
+        else:
+            return None
+
+    if isinstance(df.index, pd.MultiIndex):
+        if df.ndim > 1:
+            return unique_level_values(df, axis=0), get_top_level_columns()
+        else:
+            return unique_level_values(df, axis=0)
+    else:
+        return None, get_top_level_columns()
+
+
 def unique_level_values(df: pd.DataFrame | pd.Index, level=0, axis=0):
     idx = df if isinstance(df, pd.Index) else (df.index if axis == 0 else df.columns)
     return unique(idx.get_level_values(level)) if isinstance(idx, pd.MultiIndex) else idx

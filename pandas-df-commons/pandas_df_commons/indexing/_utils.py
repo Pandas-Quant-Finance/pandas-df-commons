@@ -5,8 +5,7 @@ from typing import Dict
 
 import pandas as pd
 
-from pandas_df_commons.indexing import unique_level_values
-from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index
+from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index, unique_level_values
 
 
 _log = logging.getLogger(__name__)
