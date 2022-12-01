@@ -3,6 +3,7 @@ from typing import Callable
 
 import pandas as pd
 
+from pandas_df_commons._utils.streaming import window
 from pandas_df_commons.indexing.decorators import convert_series_as_data_frame
 
 
@@ -23,13 +24,11 @@ def cumapply(df, func: callable, start_value=None, **kwargs):
 
 @convert_series_as_data_frame
 def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], pd.DataFrame], parallel=False):
-    last = len(df) - period + 1
     if parallel:
-        from pandas_df_commons._utils.multiprocessing import async_parallel
-        res = async_parallel(partial(func), [df.iloc[i:i+period] for i in range(0, last)])
-        res = res.get()
+        from pandas_df_commons._utils.multiprocessing import streaming_parallel
+        res = streaming_parallel(partial(func), lambda: window(df, period))
     else:
-        res = [func(df.iloc[i:i+period]) for i in range(0, last)]
+        res = [func(w) for w in window(df, period)]
 
     if isinstance(res[-1], pd.DataFrame):
         return pd.concat(res, axis=0, keys=df.index[period-1:])
