@@ -36,5 +36,6 @@ class TestExtensionFunctions(TestCase):
     def test_rolling_apply_parallel(self):
         df = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)})
         res = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]), parallel=True)
+        res = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]), parallel=True)
 
         self.assertEquals(res.shape, (48, 2))

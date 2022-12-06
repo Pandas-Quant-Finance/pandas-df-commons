@@ -22,14 +22,21 @@ def streaming_parallel(func: Callable[[Any], T], args_generator: Callable[[], Ge
     results = dict()
     futures = dict()
     pool = Pool()
+    pool.restart(force=True)
 
-    for i, arg in enumerate(args_generator()):
-        futures[i] = pool.apipe(func, arg)
-        if len(futures) > pool.ncpus:
-            # we don't want to allocate all the memory if we have no free a worker, so we wait a bit
+    try:
+        for i, arg in enumerate(args_generator()):
+            futures[i] = pool.apipe(func, arg)
+            if len(futures) > pool.ncpus:
+                # we don't want to allocate all the memory if we have no free a worker, so we wait a bit
+                wait_for_future(futures, results)
+
+        while len(futures) > 0:
             wait_for_future(futures, results)
 
-    while len(futures) > 0:
-        wait_for_future(futures, results)
-
-    return [v for k, v in sorted(results.items())]
+        return [v for k, v in sorted(results.items())]
+    finally:
+        try:
+            pool.close()
+        except Exception as ignore:
+            pass

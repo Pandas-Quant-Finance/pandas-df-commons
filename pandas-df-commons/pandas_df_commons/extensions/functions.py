@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import partial
 from typing import Callable
 
@@ -23,7 +24,7 @@ def cumapply(df, func: callable, start_value=None, **kwargs):
 
 
 @convert_series_as_data_frame
-def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], pd.DataFrame], parallel=False):
+def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], pd.DataFrame | pd.Series], parallel=False):
     if parallel:
         from pandas_df_commons._utils.multiprocessing import streaming_parallel
         res = streaming_parallel(partial(func), lambda: window(df, period))
