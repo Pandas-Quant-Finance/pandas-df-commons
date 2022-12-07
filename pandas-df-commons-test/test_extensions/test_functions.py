@@ -22,7 +22,7 @@ class TestExtensionFunctions(TestCase):
     def test_rolling_apply(self):
         df = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)})
         res = rolling_apply(df, 3, lambda x: x.sum().sum())
-        res1 = rolling_apply(df, 3, lambda x: x.sum(axis=1))
+        res1 = rolling_apply(df, 3, lambda x: x.sum(axis=1).reset_index(drop=True))
         res4 = rolling_apply(df, 3, lambda x: x.sum(axis=0))
         res2 = rolling_apply(df, 3, lambda x: x * 2)
         res3 = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]))

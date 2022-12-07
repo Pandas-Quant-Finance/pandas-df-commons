@@ -34,6 +34,6 @@ def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], 
     if isinstance(res[-1], pd.DataFrame):
         return pd.concat(res, axis=0, keys=df.index[period-1:])
     elif isinstance(res[-1], pd.Series):
-        return pd.DataFrame([r.reset_index(drop=True) for r in res], index=df.index[period - 1:])
+        return pd.DataFrame(res, index=df.index[period - 1:])
     else:
         return pd.DataFrame(res, index=df.index[period-1:])
