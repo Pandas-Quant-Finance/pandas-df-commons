@@ -18,14 +18,14 @@ def _monkey_patch_dataframe(extension_field_name=None, extension_default_value=N
     setattr(PandasObject, extension_field_name, property(lambda self: extension_class(self)))
 
 
-def _add_functions(*modules, filter: Callable[[str], str|None]):
+def _add_functions(*modules, filter: Callable[[str, str], str|None]):
     functions = {}
     for m in modules:
         for name, func in importlib.import_module(m).__dict__.items():
             if not callable(func):
                 continue
 
-            n = filter(name) if filter is not None else name
+            n = filter(m, name) if filter is not None else name
             if n is not None:
                 functions[n] = func
 
