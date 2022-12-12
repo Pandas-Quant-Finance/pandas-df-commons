@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply
+from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply
 
 df = pd.DataFrame({"A": range(1, 11)})
 
@@ -35,7 +35,16 @@ class TestExtensionFunctions(TestCase):
 
     def test_rolling_apply_parallel(self):
         df = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)})
-        res = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]), parallel=True)
+        _ = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]), parallel=True)
         res = rolling_apply(df, 3, lambda x: pd.concat([x * 2, x * 3]), parallel=True)
 
         self.assertEquals(res.shape, (48, 2))
+
+    def test_stateful_apply(self):
+        df = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)})
+        def calc(s, x):
+            return s - 1, x+s
+
+        res = sateful_apply(df, calc, 12, axis=1)
+        self.assertEquals(res["A"].tolist(), [13] * 10)
+        self.assertEquals(res["B"].tolist(), [13] * 10)

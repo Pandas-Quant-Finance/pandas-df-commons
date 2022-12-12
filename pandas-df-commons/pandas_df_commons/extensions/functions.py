@@ -1,6 +1,6 @@
 from __future__ import annotations
 from functools import partial
-from typing import Callable
+from typing import Callable, Tuple, Any
 
 import pandas as pd
 
@@ -10,6 +10,16 @@ from pandas_df_commons.indexing.decorators import convert_series_as_data_frame
 
 def cumpct_change(df):
     return ((df.pct_change().fillna(0) + 1).cumprod() - 1)
+
+
+def sateful_apply(df, func: Callable[[Any, pd.DataFrame], Tuple[Any, pd.DataFrame]], start_state=None, **kwargs):
+    state = [start_state]
+
+    def exec(x):
+        state[0], val = func(state[0], x)
+        return val
+
+    return df.apply(exec, **kwargs)
 
 
 def cumapply(df, func: callable, start_value=None, **kwargs):
