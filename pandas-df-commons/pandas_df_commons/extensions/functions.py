@@ -4,8 +4,23 @@ from typing import Callable, Tuple, Any
 
 import pandas as pd
 
+from pandas_df_commons._utils.rescaler import ReScaler
 from pandas_df_commons._utils.streaming import window
 from pandas_df_commons.indexing.decorators import convert_series_as_data_frame
+
+
+def rescale(df, range: Tuple[float, float], clip=False, axis=None):
+    if axis is None:
+        if df.ndim > 1:
+            return pd.DataFrame(
+                ReScaler((df.min().min(), df.max().max()), range, clip)(df),
+                index=df.index,
+                columns=df.columns
+            )
+        else:
+            return pd.Series(ReScaler((df.min(), df.max()), range, clip)(df), name=df.name, index=df.index)
+    else:
+        return df.apply(lambda x: ReScaler((x.min(), x.max()), range, clip)(x), axis=axis, result_type='broadcast')
 
 
 def cumpct_change(df):

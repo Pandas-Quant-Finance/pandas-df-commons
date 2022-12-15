@@ -5,6 +5,8 @@ import pandas as pd
 
 from pandas_df_commons._utils.multiprocessing import streaming_parallel
 from pandas_df_commons._utils.patching import _add_functions
+from pandas_df_commons._utils.rescaler import ReScaler
+from pandas_df_commons.extensions.functions import rescale
 
 
 class Test_Utils(TestCase):
@@ -41,3 +43,22 @@ class Test_Utils(TestCase):
         p4 = _add_functions('pandas_df_commons._utils.patching', filter=lambda _, x: "foo." + x[1:] if x.startswith("_add") else x)(None)
         self.assertIsNotNone(getattr(p4.foo, 'add_functions', None))
         self.assertIsNotNone(getattr(p4, '_monkey_patch_dataframe', None))
+
+    def test_rescaling_rows(self):
+        self.assertEquals(ReScaler((10, 8), (1, -1))(10), 1)
+        self.assertEquals(ReScaler((10, 8), (1, -1))(8), -1)
+        self.assertEquals(ReScaler((10, 8), (1, -1))(9), 0)
+
+        self.assertEquals(ReScaler((8, 10), (1, -1))(10), -1)
+        self.assertEquals(ReScaler((8, 10), (1, -1))(8), 1)
+        self.assertEquals(ReScaler((8, 10), (1, -1))(9), 0)
+
+        self.assertEquals(ReScaler((8, 10), (1, -1))(10), -1)
+        self.assertEquals(ReScaler((8, 10), (1, -1))(8), 1)
+        self.assertEquals(ReScaler((8, 10), (1, -1))(9), 0)
+
+        df = pd.DataFrame({"a": range(10)})
+        print(rescale(df, (0, 1)))
+        print(rescale(df["a"], (0, 1)))
+        print(rescale(df, (0, 1), axis=0))
+        print(rescale(df.assign(b=5), (0, 1), axis=1))

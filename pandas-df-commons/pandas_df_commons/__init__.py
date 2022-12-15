@@ -2,7 +2,7 @@
 __version__ = open(f"{__file__.replace('__init__.py', '')}VERSION").read()
 
 import logging
-from typing import Callable
+from typing import Callable, Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ _log.debug(f"pandas version {pd.__version__}")
 
 def _extender(df):
     import pandas_df_commons.indexing as indexing
-    from pandas_df_commons.extensions.functions import cumapply, cumpct_change, rolling_apply
+    from pandas_df_commons.extensions.functions import cumapply, cumpct_change, rolling_apply, rescale
 
     class Extender(object):
 
@@ -24,6 +24,9 @@ def _extender(df):
 
         def __getitem__(self, item):
             return indexing.get_columns(self.df, item)
+
+        def rescale(self, range: Tuple[float, float], clip=False, axis=None):
+            return rescale(self.df, range, clip, axis)
 
         def cumpct_change(self):
             return cumpct_change(self.df)
