@@ -1,12 +1,13 @@
 from __future__ import annotations
 from functools import partial
-from typing import Callable, Tuple, Any
+from typing import Callable, Tuple, Any, List
 
 import pandas as pd
 
 from pandas_df_commons._utils.rescaler import ReScaler
-from pandas_df_commons._utils.streaming import window
+from pandas_df_commons._utils.streaming import window, frames_at_common_index
 from pandas_df_commons.indexing.decorators import convert_series_as_data_frame
+from pandas_df_commons.indexing.intersection import intersection_of_index
 
 
 def rescale(df, range: Tuple[float, float], clip=False, axis=None):
@@ -52,7 +53,7 @@ def cumapply(df, func: callable, start_value=None, **kwargs):
 def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], pd.DataFrame | pd.Series], parallel=False):
     if parallel:
         from pandas_df_commons._utils.multiprocessing import streaming_parallel
-        res = streaming_parallel(partial(func), lambda: window(df, period))
+        res = streaming_parallel(func, lambda: window(df, period))
     else:
         res = [func(w) for w in window(df, period)]
 
@@ -62,3 +63,13 @@ def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], 
         return pd.DataFrame(res, index=df.index[period - 1:])
     else:
         return pd.DataFrame(res, index=df.index[period-1:])
+
+
+def joint_apply(*df: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Series], level=None, parallel=False):
+    if parallel:
+        from pandas_df_commons._utils.multiprocessing import streaming_parallel
+        res = streaming_parallel(func, lambda: frames_at_common_index(*df, level=level))
+    else:
+        res = [func(w) for w in frames_at_common_index(*df, level=level)]
+
+    return pd.DataFrame(res, index=intersection_of_index(*df, level=level))

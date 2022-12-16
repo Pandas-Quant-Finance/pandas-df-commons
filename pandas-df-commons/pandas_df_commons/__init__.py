@@ -15,7 +15,7 @@ _log.debug(f"pandas version {pd.__version__}")
 
 def _extender(df):
     import pandas_df_commons.indexing as indexing
-    from pandas_df_commons.extensions.functions import cumapply, cumpct_change, rolling_apply, rescale
+    from pandas_df_commons.extensions.functions import cumapply, cumpct_change, rolling_apply, rescale, joint_apply
 
     class Extender(object):
 
@@ -36,6 +36,9 @@ def _extender(df):
 
         def rolling_apply(self, period: int, func: Callable[[pd.DataFrame], pd.DataFrame], parallel=False):
             return rolling_apply(self.df, period, func, parallel)
+
+        def joint_apply(self, *dfs: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Series], level=None, parallel=False):
+            return joint_apply(self.df, *dfs, func=func, level=level, parallel=parallel)
 
 
     return Extender(df)
