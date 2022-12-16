@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply
+from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply, joint_apply
 
 df = pd.DataFrame({"A": range(1, 11)})
 
@@ -48,3 +48,11 @@ class TestExtensionFunctions(TestCase):
         res = sateful_apply(df, calc, 12, axis=1)
         self.assertEquals(res["A"].tolist(), [13] * 10)
         self.assertEquals(res["B"].tolist(), [13] * 10)
+
+    def test_joint_apply(self):
+        df1 = pd.DataFrame({"A": range(1, 11), "B": range(1, 11)}, index=range(1, 11))
+        df2 = pd.DataFrame({"A": range(0, 10), "B": range(0, 10)}, index=range(0, 10))
+
+        res = joint_apply(df1, df2, func=lambda x: x[0].sum() + x[1].sum(), parallel=True)
+        self.assertListEqual(res.index.tolist(), list(range(1, 10)))
+        self.assertListEqual(res[0].tolist(), [4, 8, 12, 16, 20, 24, 28, 32, 36])
