@@ -153,7 +153,10 @@ def rename_with_parameters(function_name, parameter_names, output_names=None):
                 ])
 
             index = args[0].index[-length:]
-            df = pd.DataFrame(np.array(result).T, index=index, columns=column_names)
+            df = pd.DataFrame(
+                result if isinstance(result, np.ndarray) else np.array(result).T,
+                index=index, columns=column_names
+            )
 
             return df
         return wrapper
