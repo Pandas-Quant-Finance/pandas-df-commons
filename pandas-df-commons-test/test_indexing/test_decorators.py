@@ -44,6 +44,7 @@ class TestDecorators(TestCase):
 
         @foreach_top_level_row
         def compute_parallel(df, y, z):
+            self.assertIsNotNone(df.index.name)
             return compute(df, y, z)
 
         def compute(df, y, z):
@@ -75,6 +76,7 @@ class TestDecorators(TestCase):
 
         @foreach_top_level_row_and_column(parallel=True)
         def compute_parallel(df, y, z):
+            assert df.index.name is not None
             return compute(df, y, z)
 
         dfres = compute_parallel(df, 0.1, 12)

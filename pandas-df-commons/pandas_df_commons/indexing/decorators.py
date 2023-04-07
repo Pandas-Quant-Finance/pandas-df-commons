@@ -7,11 +7,19 @@ from typing import Dict, Callable, Any, T
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.indexing._utils import row_agg, col_agg, get_top_level_rows, get_top_level_columns, loc_with_name
-from pandas_df_commons._utils.multiprocessing import blocking_parallel
-
+from pandas_df_commons.indexing._utils import row_agg, col_agg, get_top_level_rows, get_top_level_columns, \
+    loc_with_name, top_level_separator_generator
+from pandas_df_commons._utils.multiprocessing import blocking_parallel, streaming_parallel
 
 _log = logging.getLogger(__name__)
+
+
+def convert_series_as_data_frame(func):
+    @wraps(func)
+    def to_dataframe(df: pd.DataFrame | pd.Series, *args, **kwargs):
+        return func(df.to_frame() if df.ndim < 2 else df, *args, **kwargs)
+
+    return to_dataframe
 
 
 def foreach_column(func):
@@ -30,33 +38,53 @@ def foreach_column(func):
     return exec_on_each_column
 
 
-def convert_series_as_data_frame(func):
-    @wraps(func)
-    def to_dataframe(df: pd.DataFrame | pd.Series, *args, **kwargs):
-        return func(df.to_frame() if df.ndim < 2 else df, *args, **kwargs)
 
-    return to_dataframe
-
-
-def foreach_top_level_row_and_column(parallel=False, row_aggregator=row_agg, column_aggregator=col_agg):
+# Top Level decorator Handling
+def foreach_top_level(
+        parallel=False,
+        row_aggregator=row_agg,
+        column_aggregator=col_agg,
+        col_level=0,
+        progress_bar=False,
+):
     def decorator(func):
         @wraps(func)
         def wrapper(df, *args, **kwargs):
-            tl_rows = get_top_level_rows(df) if parallel else None
-            tl_columns = get_top_level_columns(df) if parallel else None
-            nr_rows = len(tl_rows) if tl_rows else 0
-            nr_columns = len(tl_columns) if tl_columns else 0
-            pr = nr_rows > nr_columns
+            top_level_rows = get_top_level_rows(df) if row_aggregator is not None else None
+            top_level_columns = get_top_level_columns(df, level=col_level) if column_aggregator is not None else None
+            index_generator = top_level_separator_generator(df, top_level_rows, top_level_columns, col_level)
 
-            @foreach_top_level_row_aggregate(row_aggregator, parallel=parallel and pr)
-            @foreach_top_level_column_aggregate(column_aggregator, parallel=parallel and not pr)
-            def executor(df, *args, **kwargs):
-                return func(df, *args, **kwargs)
+            if progress_bar:
+                from tqdm import tqdm
+                index_generator = tqdm(index_generator)
 
-            return executor(df, *args, **kwargs)
+            if parallel:
+                results = streaming_parallel(
+                    lambda indexes_sub_df: (indexes_sub_df[0], func(indexes_sub_df[1], *args, **kwargs)),
+                    lambda: index_generator
+                )
+            else:
+                results = [(idx, func(sub_df, *args, **kwargs)) for idx, sub_df in index_generator]
+
+            # fix names
+            for _, r in results:
+                r.index.name = df.index.name
+                r.columns.name = df.columns.name
+
+            # aggregate results[(col_idx, row_idx,), df)
+            return row_aggregator(
+                {row_tl_idx: column_aggregator(
+                    {c: f for (c, r), f in results if r == row_tl_idx},
+                    col_level
+                ) for row_tl_idx in (top_level_rows or [None])}
+            )
 
         return wrapper
     return decorator
+
+
+def foreach_top_level_row_and_column(parallel=False, row_aggregator=row_agg, column_aggregator=col_agg, progress_bar=False):
+    return foreach_top_level(parallel, row_agg, col_agg, progress_bar=progress_bar)
 
 
 def foreach_top_level_column(func):
@@ -116,7 +144,10 @@ def foreach_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = ro
                     )
                 else:
                     # sequential
-                    results = {group: func(df.loc[group], *args, **kwargs) for group in top_level}
+                    results = {group: func(loc_with_name(df, group), *args, **kwargs) for group in top_level}
+
+                for r in results.values():
+                    r.index.name = df.index.name
 
                 return aggregator(results)
             else:

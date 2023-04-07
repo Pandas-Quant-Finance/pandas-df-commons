@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
+from typing import Dict, Any, Generator, Tuple
 
 import pandas as pd
 
@@ -35,13 +35,19 @@ def same_columns_after_level(df: pd.DataFrame, level=0):
     return True
 
 
-def row_agg(results: Dict):
-    return pd.concat(results.values(), keys=results.keys(), axis=0)
+def row_agg(results: Dict[Any, pd.DataFrame]):
+    if len(results) == 1 and None in results:
+        return results[None]
+    else:
+        return pd.concat(results.values(), keys=results.keys(), axis=0)
 
 
-def col_agg(results, level):
-    groups = [add_to_multi_index(res, group, inplace=True, level=level) for group, res in results.items()]
-    return pd.concat(groups, axis=1)
+def col_agg(results: Dict[Any, pd.DataFrame], level):
+    if len(results) == 1 and None in results:
+        return results[None]
+    else:
+        groups = [add_to_multi_index(res, group, inplace=True, level=level) for group, res in results.items()]
+        return pd.concat(groups, axis=1)
 
 
 def get_top_level_columns(df, level=0):
@@ -64,7 +70,38 @@ def get_top_level_rows(df, level=0):
     return None
 
 
-def loc_with_name(df, name):
-    res = df.loc[name]
-    res.index.name = name
+def loc_with_name(df, name, axis=0, level=0):
+    res = df.xs(name, axis=axis, level=level)
+    if axis == 0:
+        res.index.name = name
+    else:
+        res.columns.name = name
+
     return res
+
+
+def top_level_separator_generator(
+        df: pd.DataFrame,
+        top_level_rows,
+        top_level_columns,
+        col_level=0,
+) -> Generator[Tuple[Tuple[Any, Any], pd.DataFrame], None, None]:
+    if top_level_columns:
+        for tl_col_idx in top_level_columns:
+            if top_level_rows:
+                for tl_row_idx in top_level_rows:
+                    yield (
+                        (tl_col_idx, tl_row_idx),
+                        loc_with_name(loc_with_name(df, tl_col_idx, axis=1, level=col_level), tl_row_idx)
+                    )
+            else:
+                yield (
+                    (tl_col_idx, None),
+                    loc_with_name(df, tl_col_idx, axis=1, level=col_level)
+                )
+    else:
+        for tl_row_idx in top_level_rows:
+            yield (
+                (None, tl_row_idx),
+                loc_with_name(df, tl_row_idx)
+            )
