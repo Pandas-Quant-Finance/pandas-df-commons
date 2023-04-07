@@ -63,3 +63,8 @@ def get_top_level_rows(df, level=0):
 
     return None
 
+
+def loc_with_name(df, name):
+    res = df.loc[name]
+    res.index.name = name
+    return res

@@ -7,7 +7,7 @@ from typing import Dict, Callable, Any, T
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.indexing._utils import row_agg, col_agg, get_top_level_rows, get_top_level_columns
+from pandas_df_commons.indexing._utils import row_agg, col_agg, get_top_level_rows, get_top_level_columns, loc_with_name
 from pandas_df_commons._utils.multiprocessing import blocking_parallel
 
 
@@ -110,7 +110,7 @@ def foreach_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = ro
                             top_level,
                             blocking_parallel(
                                lambda sub_df: func(sub_df, *args, **kwargs),
-                               [df.loc[tl] for tl in top_level]
+                               [loc_with_name(df, tl) for tl in top_level]
                             )
                         )
                     )

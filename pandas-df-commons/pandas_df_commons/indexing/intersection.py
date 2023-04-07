@@ -16,3 +16,8 @@ def intersection_of_index(*dfs: pd.DataFrame | pd.Index, level=None):
             intersect_index = intersect_index.intersection(other_index)
 
     return intersect_index.sort_values()
+
+
+def aligend_frames(*dfs: pd.DataFrame, level=None, dropna=False):
+    idx = intersection_of_index(*[df.dropna() if dropna else df for df in dfs if df is not None], level=level)
+    return (df.loc[idx] if df is not None else None for df in dfs)

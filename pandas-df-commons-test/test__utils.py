@@ -57,7 +57,7 @@ class Test_Utils(TestCase):
         self.assertEquals(ReScaler((8, 10), (1, -1))(8), 1)
         self.assertEquals(ReScaler((8, 10), (1, -1))(9), 0)
 
-        df = pd.DataFrame({"a": range(10)})
+        df = pd.DataFrame({"a": range(10), "b": range(10)})
         print(rescale(df, (0, 1)))
         print(rescale(df["a"], (0, 1)))
         print(rescale(df, (0, 1), axis=0))
