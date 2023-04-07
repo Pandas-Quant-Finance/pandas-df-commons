@@ -72,8 +72,8 @@ def foreach_top_level(
                 r.columns.name = df.columns.name
 
             # aggregate results[(col_idx, row_idx,), df)
-            return row_aggregator(
-                {row_tl_idx: column_aggregator(
+            return (row_aggregator or row_agg)(
+                {row_tl_idx: (column_aggregator or col_agg)(
                     {c: f for (c, r), f in results if r == row_tl_idx},
                     col_level
                 ) for row_tl_idx in (top_level_rows or [None])}
@@ -92,32 +92,7 @@ def foreach_top_level_column(func):
 
 
 def foreach_top_level_column_aggregate(aggregator: Callable[[Dict[Any, T], int], T] = col_agg, level=0, parallel=False):
-    def decorator(func):
-        @wraps(func)
-        def exec_on_each_tl_column(df: pd.DataFrame, *args, **kwargs):
-            top_level = get_top_level_columns(df, level=level)
-            if top_level:
-                if parallel:
-                    # multiProcessing
-                    results = dict(
-                        zip(
-                            top_level,
-                            blocking_parallel(
-                                lambda sub_df: func(sub_df, *args, **kwargs),
-                                [df.xs(tl, axis=1, level=level).copy() for tl in top_level]
-                            )
-                        )
-                    )
-                else:
-                    # sequential
-                    results = {group: func(df.xs(group, axis=1, level=level), *args, **kwargs) for group in top_level}
-
-                return aggregator(results, level)
-            else:
-                return func(df, *args, **kwargs)
-
-        return exec_on_each_tl_column
-    return decorator
+    return foreach_top_level(parallel, None, aggregator, level)
 
 
 def foreach_top_level_row(func):
@@ -125,36 +100,7 @@ def foreach_top_level_row(func):
 
 
 def foreach_top_level_row_aggregate(aggregator: Callable[[Dict[Any, T]], T] = row_agg, parallel=False):
-    def decorator(func):
-        @wraps(func)
-        def exec_on_each_tl_row(df: pd.DataFrame, *args, **kwargs):
-            top_level = get_top_level_rows(df)
-
-            if top_level:
-                # multiProcessing
-                if parallel:
-                    results = dict(
-                        zip(
-                            top_level,
-                            blocking_parallel(
-                               lambda sub_df: func(sub_df, *args, **kwargs),
-                               [loc_with_name(df, tl) for tl in top_level]
-                            )
-                        )
-                    )
-                else:
-                    # sequential
-                    results = {group: func(loc_with_name(df, group), *args, **kwargs) for group in top_level}
-
-                for r in results.values():
-                    r.index.name = df.index.name
-
-                return aggregator(results)
-            else:
-                return func(df, *args, **kwargs)
-
-        return exec_on_each_tl_row
-    return decorator
+    return foreach_top_level(parallel, aggregator, None)
 
 
 def is_time_consuming(func):
