@@ -53,12 +53,14 @@ def foreach_top_level(
             top_level_rows = get_top_level_rows(df) if row_aggregator is not None else None
             top_level_columns = get_top_level_columns(df, level=col_level) if column_aggregator is not None else None
             index_generator = top_level_separator_generator(df, top_level_rows, top_level_columns, col_level)
+            parts = len(top_level_columns) if top_level_columns is not None else 0
+            parts += len(top_level_rows) if top_level_rows is not None else 0
 
             if progress_bar:
                 from tqdm import tqdm
                 index_generator = tqdm(index_generator)
 
-            if parallel:
+            if parallel and parts > 1:
                 results = streaming_parallel(
                     lambda indexes_sub_df: (indexes_sub_df[0], func(indexes_sub_df[1], *args, **kwargs)),
                     lambda: index_generator

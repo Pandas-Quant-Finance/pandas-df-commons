@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import os
 import numpy as np
 import pandas as pd
 
@@ -63,6 +64,7 @@ class TestDecorators(TestCase):
         pd.testing.assert_frame_equal(res.loc["C"], expected["C"])
 
     def test_multiindex_rows_and_columns_parallel(self):
+        this_pid = os.getpid()
         keys = ["A", "B", "C"]
         frames = [_frame(100) for _ in keys]
         df = pd.concat(
@@ -72,6 +74,8 @@ class TestDecorators(TestCase):
         )
 
         def compute(df, y, z):
+            # should raise at least once
+            # assert os.getpid() == this_pid
             return df.pct_change().fillna(y) + z
 
         @foreach_top_level_row_and_column(parallel=True)
