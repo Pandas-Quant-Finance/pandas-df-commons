@@ -99,3 +99,12 @@ class TestDecorators(TestCase):
             return x
 
         pd.testing.assert_frame_equal(df, compute(df))
+
+    def test_only_single_levels(self):
+        df = pd.DataFrame({"A": range(10)})
+
+        @foreach_top_level_row_and_column()
+        def compute(x):
+            return x
+
+        pd.testing.assert_frame_equal(df, compute(df))

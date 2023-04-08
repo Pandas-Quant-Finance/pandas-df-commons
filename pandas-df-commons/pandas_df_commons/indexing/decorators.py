@@ -56,30 +56,33 @@ def foreach_top_level(
             parts = len(top_level_columns) if top_level_columns is not None else 0
             parts += len(top_level_rows) if top_level_rows is not None else 0
 
-            if parallel and parts > 1:
-                if progress_bar:
-                    from tqdm import tqdm
-                    index_generator = tqdm(index_generator, total=parts)
-
-                results = streaming_parallel(
-                    lambda indexes_sub_df: (indexes_sub_df[0], func(indexes_sub_df[1], *args, **kwargs)),
-                    lambda: index_generator
-                )
+            if top_level_rows is None and top_level_columns is None:
+                return func(df, *args, **kwargs)
             else:
-                results = [(idx, func(sub_df, *args, **kwargs)) for idx, sub_df in index_generator]
+                if parallel and parts > 1:
+                    if progress_bar:
+                        from tqdm import tqdm
+                        index_generator = tqdm(index_generator, total=parts)
 
-            # fix names
-            for _, r in results:
-                r.index.name = df.index.name
-                r.columns.name = df.columns.name
+                    results = streaming_parallel(
+                        lambda indexes_sub_df: (indexes_sub_df[0], func(indexes_sub_df[1], *args, **kwargs)),
+                        lambda: index_generator
+                    )
+                else:
+                    results = [(idx, func(sub_df, *args, **kwargs)) for idx, sub_df in index_generator]
 
-            # aggregate results[(col_idx, row_idx,), df)
-            return (row_aggregator or row_agg)(
-                {row_tl_idx: (column_aggregator or col_agg)(
-                    {c: f for (c, r), f in results if r == row_tl_idx},
-                    col_level
-                ) for row_tl_idx in (top_level_rows or [None])}
-            )
+                # fix names
+                for _, r in results:
+                    r.index.name = df.index.name
+                    r.columns.name = df.columns.name
+
+                # aggregate results[(col_idx, row_idx,), df)
+                return (row_aggregator or row_agg)(
+                    {row_tl_idx: (column_aggregator or col_agg)(
+                        {c: f for (c, r), f in results if r == row_tl_idx},
+                        col_level
+                    ) for row_tl_idx in (top_level_rows or [None])}
+                )
 
         return wrapper
     return decorator
