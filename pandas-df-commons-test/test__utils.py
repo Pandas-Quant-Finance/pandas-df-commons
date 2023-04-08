@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 import numpy as np
@@ -22,6 +23,16 @@ class Test_Utils(TestCase):
             results,
             [x * 2 for x in range(l)]
         )
+
+    def test_streaming_parallel_pids(self):
+        l = 100
+        results = set(streaming_parallel(
+            lambda x: os.getpid(),
+            lambda: range(l)
+        ))
+
+        print(results)
+        self.assertGreater(len(results), 1)
 
     def test_Patch(self):
         p1 = _add_functions('pandas_df_commons._utils.patching', filter=lambda _, x: x[1:] if x.startswith("_add") else None)(None)

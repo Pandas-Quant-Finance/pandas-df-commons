@@ -1,15 +1,23 @@
+import os
 from time import sleep
 from typing import Callable, Generator, List, T, Any
 
 
+def _get_pool(streaming=False):
+    if streaming:
+        from pathos.multiprocessing import ProcessingPool as Pool
+    else:
+        from pathos.multiprocessing import Pool
+
+    pool_size = os.environ.get("PANDAS_DF_COMMONS_POOL_SIZE", "")
+    return Pool(nodes=int(pool_size)) if pool_size else Pool()
+
+
 def blocking_parallel(func, args):
-    from pathos.multiprocessing import Pool
-    return Pool().map(func, args)
+    return _get_pool().map(func, args)
 
 
 def streaming_parallel(func: Callable[[Any], T], args_generator: Callable[[], Generator]) -> List[T]:
-    from pathos.multiprocessing import ProcessingPool as Pool
-
     def wait_for_future(futures, results):
         for i, r in futures.items():
             if r.ready():
@@ -21,7 +29,7 @@ def streaming_parallel(func: Callable[[Any], T], args_generator: Callable[[], Ge
 
     results = dict()
     futures = dict()
-    pool = Pool()
+    pool = _get_pool(True)
     pool.restart(force=True)
 
     try:
