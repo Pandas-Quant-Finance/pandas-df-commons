@@ -83,8 +83,8 @@ def loc_with_name(df, name, axis=0, level=0):
 
 def top_level_separator_generator(
         df: pd.DataFrame,
-        top_level_rows: list,
-        top_level_columns: list,
+        top_level_rows: list | None,
+        top_level_columns: list | None,
         col_level=0,
         shuffle_columns=False,
         shuffle_rows=False,
