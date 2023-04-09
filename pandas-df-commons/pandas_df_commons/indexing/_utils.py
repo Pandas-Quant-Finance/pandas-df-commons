@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from typing import Dict, Any, Generator, Tuple
 
 import pandas as pd
@@ -61,7 +62,7 @@ def get_top_level_columns(df, level=0):
     return None
 
 
-def get_top_level_rows(df, level=0):
+def get_top_level_rows(df, level=0) -> list:
     if isinstance(df.index, pd.MultiIndex):
         top_level = unique_level_values(df, level=level, axis=0)
         if len(top_level) > 1:
@@ -82,10 +83,15 @@ def loc_with_name(df, name, axis=0, level=0):
 
 def top_level_separator_generator(
         df: pd.DataFrame,
-        top_level_rows,
-        top_level_columns,
+        top_level_rows: list,
+        top_level_columns: list,
         col_level=0,
+        shuffle_columns=False,
+        shuffle_rows=False,
 ) -> Generator[Tuple[Tuple[Any, Any], pd.DataFrame], None, None]:
+    if top_level_columns and shuffle_columns: random.shuffle(top_level_columns)
+    if top_level_rows and shuffle_rows: random.shuffle(top_level_rows)
+
     if top_level_columns:
         for tl_col_idx in top_level_columns:
             if top_level_rows:
