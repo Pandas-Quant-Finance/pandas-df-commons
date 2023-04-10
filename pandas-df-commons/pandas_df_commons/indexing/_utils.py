@@ -106,8 +106,11 @@ def top_level_separator_generator(
                     loc_with_name(df, tl_col_idx, axis=1, level=col_level)
                 )
     else:
-        for tl_row_idx in top_level_rows:
-            yield (
-                (None, tl_row_idx),
-                loc_with_name(df, tl_row_idx)
-            )
+        if top_level_rows:
+            for tl_row_idx in top_level_rows:
+                yield (
+                    (None, tl_row_idx),
+                    loc_with_name(df, tl_row_idx)
+                )
+        else:
+            yield ((None, None), df)
