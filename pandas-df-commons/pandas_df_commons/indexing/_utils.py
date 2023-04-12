@@ -86,11 +86,11 @@ def top_level_separator_generator(
         top_level_rows: list | None,
         top_level_columns: list | None,
         col_level=0,
-        shuffle_columns=False,
-        shuffle_rows=False,
+        shuffle_level_columns=False,
+        shuffle_top_level_rows=False,
 ) -> Generator[Tuple[Tuple[Any, Any], pd.DataFrame], None, None]:
-    if top_level_columns and shuffle_columns: random.shuffle(top_level_columns)
-    if top_level_rows and shuffle_rows: random.shuffle(top_level_rows)
+    if top_level_columns and shuffle_level_columns: random.shuffle(top_level_columns)
+    if top_level_rows and shuffle_top_level_rows: random.shuffle(top_level_rows)
 
     if top_level_columns:
         for tl_col_idx in top_level_columns:

@@ -17,39 +17,39 @@ class TestIndexingUtils(TestCase):
         top_level_rows = get_top_level_rows(df1)
         top_level_columns = get_top_level_columns(df1)
         self.assertNotEqual(
-            [x for (_, x), _ in top_level_separator_generator(df1, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)],
-            [x for (_, x), _ in top_level_separator_generator(df1, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)]
+            [x for (_, x), _ in top_level_separator_generator(df1, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)],
+            [x for (_, x), _ in top_level_separator_generator(df1, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)]
         )
 
         top_level_rows = get_top_level_rows(df2)
         top_level_columns = get_top_level_columns(df2)
         self.assertNotEqual(
-            [y for (y, _), _ in top_level_separator_generator(df2, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)],
-            [y for (y, _), _ in top_level_separator_generator(df2, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)]
+            [y for (y, _), _ in top_level_separator_generator(df2, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)],
+            [y for (y, _), _ in top_level_separator_generator(df2, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)]
         )
 
         top_level_rows = get_top_level_rows(df3)
         top_level_columns = get_top_level_columns(df3)
         self.assertNotEqual(
-            [z for z, _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)],
-            [z for z, _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)]
+            [z for z, _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)],
+            [z for z, _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)]
         )
 
         top_level_rows = get_top_level_rows(df3)
         top_level_columns = get_top_level_columns(df3)
         self.assertNotEqual(
-            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)],
-            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=True)]
+            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)],
+            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=True)]
         )
         self.assertNotEqual(
-            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=False, shuffle_columns=True)],
-            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=False, shuffle_columns=True)]
+            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=False, shuffle_level_columns=True)],
+            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=False, shuffle_level_columns=True)]
         )
         self.assertListEqual(
-            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=False, shuffle_columns=True)],
-            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=False, shuffle_columns=True)]
+            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=False, shuffle_level_columns=True)],
+            [x for (_, x), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=False, shuffle_level_columns=True)]
         )
         self.assertListEqual(
-            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=False)],
-            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_rows=True, shuffle_columns=False)]
+            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=False)],
+            [y for (y, _), _ in top_level_separator_generator(df3, top_level_rows, top_level_columns, shuffle_top_level_rows=True, shuffle_level_columns=False)]
         )
