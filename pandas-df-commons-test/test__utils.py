@@ -3,10 +3,12 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from flaky import flaky
 
 from pandas_df_commons._utils.multiprocessing import streaming_parallel
 from pandas_df_commons._utils.patching import _add_functions
 from pandas_df_commons._utils.rescaler import ReScaler
+from pandas_df_commons._utils.streaming import window
 from pandas_df_commons.extensions.functions import rescale
 
 
@@ -73,3 +75,20 @@ class Test_Utils(TestCase):
         print(rescale(df["a"], (0, 1)))
         print(rescale(df, (0, 1), axis=0))
         print(rescale(df.assign(b=5), (0, 1), axis=1))
+
+    @flaky(max_runs=3)
+    def test_window(self):
+        df = pd.DataFrame({"a": range(10), "b": range(10)})
+        ordered_windows = [w for w in window(df, 3)]
+        # print(ordered_windows)
+        self.assertEqual(len(ordered_windows), 10-3+1)
+        self.assertListEqual(ordered_windows[0].index.tolist(), [0, 1, 2])
+        self.assertListEqual(ordered_windows[-1].index.tolist(), [7, 8, 9])
+
+        shuffled_windows = [w for w in window(df, 3, shuffle=True)]
+        # print(shuffled_windows)
+        self.assertEqual(len(shuffled_windows), 10 - 3 + 1)
+        self.assertNotEqual(shuffled_windows[0].index.tolist()[0], 0)
+        self.assertNotEqual(shuffled_windows[-1].index.tolist()[-1], 9)
+
+

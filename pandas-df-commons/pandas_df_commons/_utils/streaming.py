@@ -1,11 +1,19 @@
+import random
+
 import pandas as pd
 
 from pandas_df_commons.indexing.intersection import intersection_of_index
 
 
-def window(df: pd.DataFrame, period: int):
+def window(df: pd.DataFrame, period: int, shuffle: bool = False):
     last = len(df) - period + 1
-    for i in range(0, last):
+    all_windows = range(0, last)
+
+    if shuffle:
+        all_windows = list(all_windows)
+        random.shuffle(all_windows)
+
+    for i in all_windows:
         yield df.iloc[i:i + period]
 
 
