@@ -5,10 +5,11 @@ import numpy as np
 import pandas as pd
 from flaky import flaky
 
+from pandas_df_commons._utils.batch import Batch
 from pandas_df_commons._utils.multiprocessing import streaming_parallel
 from pandas_df_commons._utils.patching import _add_functions
 from pandas_df_commons._utils.rescaler import ReScaler
-from pandas_df_commons._utils.streaming import window
+from pandas_df_commons._utils.streaming import window, Window
 from pandas_df_commons.extensions.functions import rescale
 
 
@@ -91,4 +92,15 @@ class Test_Utils(TestCase):
         self.assertNotEqual(shuffled_windows[0].index.tolist()[0], 0)
         self.assertNotEqual(shuffled_windows[-1].index.tolist()[-1], 9)
 
+    def test_Window(self):
+        df = pd.DataFrame({"a": range(10), "b": range(10)})
+        windows = Window(df, 3)
+        for i, w in enumerate(windows):
+            pd.testing.assert_frame_equal(w, windows[i])
 
+    def test_batch(self):
+        batches = list(Batch(range(21), 10))
+        self.assertEqual(len(batches), 3)
+        self.assertListEqual(batches[0], list(range(10)))
+        self.assertListEqual(batches[1], list(range(10, 20)))
+        self.assertListEqual(batches[2], list(range(20, 21)))
