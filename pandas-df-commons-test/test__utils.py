@@ -109,11 +109,11 @@ class Test_Utils(TestCase):
     def test_batch(self):
         batches = list(Batch(range(21), 10))
         self.assertEqual(len(batches), 3)
-        self.assertListEqual(batches[0], list(range(10)))
-        self.assertListEqual(batches[1], list(range(10, 20)))
-        self.assertListEqual(batches[2], list(range(20, 21)))
+        self.assertListEqual(list(batches[0]), list(range(10)))
+        self.assertListEqual(list(batches[1]), list(range(10, 20)))
+        self.assertListEqual(list(batches[2]), list(range(20, 21)))
 
-        self.assertListEqual(batches[2], list(Batch(range(21), 10)[2]))
+        self.assertListEqual(list(batches[2]), list(Batch(range(21), 10)[2]))
 
         df = pd.DataFrame({"a": range(10), "b": range(10)})
         batches = Batch(df, 3)
