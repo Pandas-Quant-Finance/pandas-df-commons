@@ -9,14 +9,12 @@ from pandas_df_commons.indexing.intersection import intersection_of_index
 
 class Window(object):
 
-    def __init__(self, df: pd.DataFrame, period: int | None, shuffle: bool = False, **kwargs):
+    def __init__(self, df: pd.DataFrame, period: int | None, shuffle: bool = False):
         super().__init__()
         self.df = df
         self.period = period
         self.shuffle = shuffle
-        self.kwargs = kwargs
 
-        self.has_kwargs = len(self.kwargs) > 0
         self.last = len(df) - (period or 1) + 1
         self.all_windows = list(range(0, self.last))
         self._index = -1
@@ -32,7 +30,7 @@ class Window(object):
         if self._index >= self.last:
             raise StopIteration()
         else:
-            return self.__return__(self[self._index])
+            return self[self._index]
 
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -41,15 +39,10 @@ class Window(object):
             i = self.all_windows[item]
 
             # if period is None we just stream as it we would have called `iterrows` or `items`
-            return self.__return__(
-                self.df.iloc[i:i + self.period] if self.period else self.df.iloc[i]
-            )
+            return self.df.iloc[i:i + self.period] if self.period else self.df.iloc[i]
 
     def __len__(self):
         return self.last
-
-    def __return__(self, value):
-        return value if not self.has_kwargs else (value, self.kwargs)
 
     def reset(self):
         self._index = -1
