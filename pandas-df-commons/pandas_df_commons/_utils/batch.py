@@ -1,4 +1,9 @@
+from functools import lru_cache
 from typing import Iterator
+
+import numpy as np
+
+from pandas_df_commons._utils.streaming import IterRows
 
 
 class Batch(object):
@@ -9,19 +14,30 @@ class Batch(object):
         self.batch_size = batch_size
         self.batch = []
 
+        self.iter_length = len(iterable)
+        self._iterable = iterable
+
     def __iter__(self):
         return self
 
+    def __getitem__(self, item):
+        assert 0 <= item < len(self), "index out of bounds"
+        pos = item * self.batch_size
+        if getattr(self.iterable, 'iloc', False):
+            return self.iterable.iloc[pos:pos+self.batch_size]
+        else:
+            return self.iterable[pos:pos+self.batch_size]
+
     def __next__(self):
-        if not isinstance(self.iterable, Iterator):
-            self.iterable = iter(self.iterable)
+        if not isinstance(self._iterable, Iterator):
+            self._iterable = IterRows(self._iterable)
 
         if self.batch is None:
             raise StopIteration()
 
         try:
             while len(self.batch) < self.batch_size:
-                self.batch.append(next(self.iterable))
+                self.batch.append(next(self._iterable))
 
             batch = self.batch
             self.batch = []
@@ -32,4 +48,5 @@ class Batch(object):
             self.batch = None
             return batch
 
-
+    def __len__(self):
+        return int(np.ceil(self.iter_length / self.batch_size))

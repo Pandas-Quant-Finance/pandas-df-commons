@@ -9,7 +9,7 @@ from pandas_df_commons._utils.batch import Batch
 from pandas_df_commons._utils.multiprocessing import streaming_parallel
 from pandas_df_commons._utils.patching import _add_functions
 from pandas_df_commons._utils.rescaler import ReScaler
-from pandas_df_commons._utils.streaming import window, Window
+from pandas_df_commons._utils.streaming import window, Window, IterRows
 from pandas_df_commons.extensions.functions import rescale
 
 
@@ -92,11 +92,19 @@ class Test_Utils(TestCase):
         self.assertNotEqual(shuffled_windows[0].index.tolist()[0], 0)
         self.assertNotEqual(shuffled_windows[-1].index.tolist()[-1], 9)
 
+    def test_IterRows(self):
+        df = pd.DataFrame({"a": range(10), "b": range(10)})
+        it = IterRows(df)
+        pd.testing.assert_frame_equal(df, pd.DataFrame([r for r in it]))
+        pd.testing.assert_frame_equal(df, pd.DataFrame([it[i] for i in range(len(df))]))
+
     def test_Window(self):
         df = pd.DataFrame({"a": range(10), "b": range(10)})
         windows = Window(df, 3)
         for i, w in enumerate(windows):
             pd.testing.assert_frame_equal(w, windows[i])
+
+        self.assertEquals(2, len(windows[:2]))
 
     def test_batch(self):
         batches = list(Batch(range(21), 10))
@@ -104,3 +112,10 @@ class Test_Utils(TestCase):
         self.assertListEqual(batches[0], list(range(10)))
         self.assertListEqual(batches[1], list(range(10, 20)))
         self.assertListEqual(batches[2], list(range(20, 21)))
+
+        self.assertListEqual(batches[2], list(Batch(range(21), 10)[2]))
+
+        df = pd.DataFrame({"a": range(10), "b": range(10)})
+        batches = Batch(df, 3)
+        for i, b in enumerate(batches):
+            print(b)
