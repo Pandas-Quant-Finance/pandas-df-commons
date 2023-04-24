@@ -33,12 +33,16 @@ class Batch(object):
             return self.__return__(self.iterable[pos:pos+self.batch_size])
 
     def __next__(self):
+        # check if we emitted the last batch already
+        if self.batch is None:
+            self._end_iter_and_reset()
+
         # slicing is supposed to be faster than iterating, we want to try to slice first
         if self._index is not None:
             try:
                 self._index += 1
                 if self._index >= len(self):
-                    raise StopIteration()
+                    self._end_iter_and_reset()
                 else:
                     return self[self._index]
             except IndexError as e:
@@ -47,9 +51,6 @@ class Batch(object):
         # slicing did not work for this iterable, so we stream into batches
         if not isinstance(self._iterable, Iterator):
             self._iterable = IterRows(self._iterable)
-
-        if self.batch is None:
-            raise StopIteration()
 
         try:
             while len(self.batch) < self.batch_size:
@@ -70,3 +71,9 @@ class Batch(object):
 
     def __return__(self, value):
         return value if not self.has_kwargs else (value, self.kwargs)
+
+    def _end_iter_and_reset(self):
+        self.batch = []
+        self._iterable = self.iterable
+        self._index = -1
+        raise StopIteration()
