@@ -18,7 +18,7 @@ class Batch(object):
 
         self.has_kwargs = len(kwargs) > 0
         self.batch, self._iterable, self._index = self.__reset_iteration()
-        self.iter_length = self.__estimate_length__(iterable)
+        self.iter_length = None
 
     def __iter__(self):
         return self
@@ -66,6 +66,7 @@ class Batch(object):
 
     @lru_cache(1)
     def __len__(self):
+        self.iter_length = self.__estimate_length__(self.iterable)
         return int(np.ceil(self.iter_length / self.batch_size))
 
     def __return__(self, value):
