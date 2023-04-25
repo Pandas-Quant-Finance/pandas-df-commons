@@ -118,4 +118,13 @@ class Test_Utils(TestCase):
         df = pd.DataFrame({"a": range(10), "b": range(10)})
         batches = Batch(df, 3)
         for i, b in enumerate(batches):
-            print(b)
+            pd.testing.assert_frame_equal(b, batches[i])
+
+        # test non slice-able iterator
+        batches = Batch(zip(range(7), range(7)), 3, copy=True)
+        res = {0: [], 1: []}
+        for i in range(2):
+            for b in batches:
+                res[i].append(b)
+
+        self.assertListEqual(res[0], res[1])

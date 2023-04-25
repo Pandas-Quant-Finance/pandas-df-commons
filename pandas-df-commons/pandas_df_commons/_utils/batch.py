@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import lru_cache
 from typing import Iterator
 
@@ -8,18 +9,16 @@ from pandas_df_commons._utils.streaming import IterRows
 
 class Batch(object):
 
-    def __init__(self, iterable, batch_size=1, **kwargs):
+    def __init__(self, iterable, batch_size=1, copy=False, **kwargs):
         super().__init__()
         self.iterable = iterable
         self.batch_size = batch_size
+        self.copy = copy
         self.kwargs = kwargs
 
         self.has_kwargs = len(kwargs) > 0
-        self.batch = []
-
-        self.iter_length = len(iterable)
-        self._iterable = iterable
-        self._index = -1
+        self.batch, self._iterable, self._index = self.__reset_iteration()
+        self.iter_length = self.__estimate_length__(iterable)
 
     def __iter__(self):
         return self
@@ -45,7 +44,7 @@ class Batch(object):
                     self._end_iter_and_reset()
                 else:
                     return self[self._index]
-            except IndexError as e:
+            except TypeError as e:
                 self._index = None
 
         # slicing did not work for this iterable, so we stream into batches
@@ -72,8 +71,20 @@ class Batch(object):
     def __return__(self, value):
         return value if not self.has_kwargs else (value, self.kwargs)
 
+    def __estimate_length__(self, iterable):
+        try:
+            return len(iterable)
+        except Exception as e:
+            i = -1
+            for i, _ in enumerate(deepcopy(iterable) if self.copy else iterable): pass
+            return i
+
     def _end_iter_and_reset(self):
-        self.batch = []
-        self._iterable = self.iterable
-        self._index = -1
+        self.__reset_iteration()
         raise StopIteration()
+
+    def __reset_iteration(self):
+        self.batch = []
+        self._iterable = deepcopy(self.iterable) if self.copy else self.iterable
+        self._index = -1
+        return self.batch, self._iterable, self._index
