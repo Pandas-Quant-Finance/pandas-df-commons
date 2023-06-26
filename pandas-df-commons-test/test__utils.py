@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from flaky import flaky
 
-from pandas_df_commons._utils.batch import Batch
 from pandas_df_commons._utils.multiprocessing import streaming_parallel
 from pandas_df_commons._utils.patching import _add_functions
 from pandas_df_commons._utils.rescaler import ReScaler

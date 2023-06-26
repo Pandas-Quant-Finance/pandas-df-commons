@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from typing import Iterable, Tuple, Any
 
 import pandas as pd
 
@@ -44,3 +45,15 @@ def add_to_multi_index(df, head, inplace=False, axis=1, level=0):
         raise ValueError("illegal axis, expected 0|1")
 
     return df
+
+
+def make_top_level_row_iterator(frames: pd.DataFrame | Iterable[Tuple[Any, pd.DataFrame]], level: int = 0) -> Tuple[Any, pd.DataFrame]:
+    if isinstance(frames, pd.DataFrame):
+        frames = [(None, frames)]
+
+    for name, frame in frames:
+        if isinstance(frame.index, pd.MultiIndex):
+            for idx in unique_level_values(frame.index, level=level):
+                yield (name, idx) if name is not None else idx, frame.loc[idx]
+        else:
+            yield name, frame

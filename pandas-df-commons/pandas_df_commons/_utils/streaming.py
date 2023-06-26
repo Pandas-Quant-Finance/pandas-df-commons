@@ -68,6 +68,12 @@ def window(df: pd.DataFrame, period: int, shuffle: bool = False, all_windows = N
 def frames_at_common_index(*dfs: pd.DataFrame, level=None):
     dfs = [f for f in dfs if f is not None]
     idx = intersection_of_index(*dfs, level=level)
+    return [df.loc[idx] for df in dfs]
+
+
+def frames_at_common_index_generator(*dfs: pd.DataFrame, level=None):
+    dfs = [f for f in dfs if f is not None]
+    idx = intersection_of_index(*dfs, level=level)
     for i in idx:
         if len(dfs) > 1:
             yield tuple(df.loc[i] for df in dfs)

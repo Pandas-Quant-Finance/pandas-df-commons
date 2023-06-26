@@ -5,7 +5,7 @@ from typing import Callable, Tuple, Any, List
 import pandas as pd
 
 from pandas_df_commons._utils.rescaler import ReScaler
-from pandas_df_commons._utils.streaming import window, frames_at_common_index
+from pandas_df_commons._utils.streaming import window, frames_at_common_index_generator
 from pandas_df_commons.indexing.decorators import convert_series_as_data_frame
 from pandas_df_commons.indexing.intersection import intersection_of_index
 
@@ -68,8 +68,8 @@ def rolling_apply(df: pd.DataFrame, period: int, func: Callable[[pd.DataFrame], 
 def joint_apply(*df: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Series], level=None, parallel=False):
     if parallel:
         from pandas_df_commons._utils.multiprocessing import streaming_parallel
-        res = streaming_parallel(func, lambda: frames_at_common_index(*df, level=level))
+        res = streaming_parallel(func, lambda: frames_at_common_index_generator(*df, level=level))
     else:
-        res = [func(w) for w in frames_at_common_index(*df, level=level)]
+        res = [func(w) for w in frames_at_common_index_generator(*df, level=level)]
 
     return pd.DataFrame(res, index=intersection_of_index(*df, level=level))
