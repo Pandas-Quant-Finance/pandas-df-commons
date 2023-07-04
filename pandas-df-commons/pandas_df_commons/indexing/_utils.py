@@ -65,8 +65,7 @@ def get_top_level_columns(df, level=0):
 def get_top_level_rows(df, level=0) -> list:
     if isinstance(df.index, pd.MultiIndex):
         top_level = unique_level_values(df, level=level, axis=0)
-        if len(top_level) > 1:
-            return top_level
+        return top_level
 
     return None
 

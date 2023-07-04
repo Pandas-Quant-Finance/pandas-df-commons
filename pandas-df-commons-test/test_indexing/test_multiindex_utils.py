@@ -3,7 +3,8 @@ from unittest import TestCase
 import pandas as pd
 
 from pandas_df_commons.indexing._utils import same_columns_after_level
-from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index, get_top_level_of_multi_index
+from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index, get_top_level_of_multi_index, nth, \
+    index_shape, index_counts
 
 
 class TestMultiIndexUtils(TestCase):
@@ -42,3 +43,67 @@ class TestMultiIndexUtils(TestCase):
 
         # test corner case series
         self.assertEquals(get_top_level_of_multi_index(pd.concat([df["a"], df["a"]], axis=0, keys=[1, 2])), [1, 2])
+
+    def test_nth(self):
+        df=pd.DataFrame({"a": range(8)})
+        self.assertEquals(len(nth(df, 3)), 3)
+        self.assertEquals(len(nth(df, 3, include_last=True)), 4)
+
+        dfmi = pd.DataFrame({"a": range(8 * 2)}, index=pd.MultiIndex.from_product([range(8), range(2)]))
+        self.assertEquals(len(nth(dfmi, 3, level=0)), 3*2)
+        self.assertEquals(len(nth(dfmi, 3, level=0, include_last=True)), 4*2)
+
+    def test_multiindex_counts(self):
+        self.assertDictEqual(index_counts(pd.Index(range(4))), {0: 4})
+        self.assertDictEqual(
+            index_counts(pd.MultiIndex.from_product([range(4), range(3)])),
+            {i: {0: 3} for i in range(4)}
+        )
+        self.assertDictEqual(
+            index_counts(pd.MultiIndex.from_product([range(4), range(2), range(3)])),
+            {i: {j: {0: 3} for j in range(2)} for i in range(4)}
+        )
+
+        self.assertEquals(index_counts(pd.Index(range(0))), {0: 0})
+        self.assertEquals(index_counts(pd.MultiIndex.from_product([[], []])), {0: {0: 0}},)
+        self.assertEquals(
+            index_counts(pd.MultiIndex.from_tuples([(1, 0), (1, 1), (0, 0), (0, 1), (0, 2)])),
+            {
+                1: {0: 2},
+                0: {0: 3},
+            }
+        )
+        self.assertEquals(
+            index_counts(pd.MultiIndex.from_tuples([(1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0), (0, 2, 0)])),
+            {
+                1:{ 0: {0: 1}, 1: {0: 1} },
+                0:{ 0: {0: 1}, 1: {0: 1}, 2: {0: 1} },
+            }
+        )
+        self.assertDictEqual(
+            index_counts(pd.MultiIndex.from_tuples([(1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0), (0, 1, 2)])),
+            {
+                1: {0: {0: 1}, 1: {0: 1}},
+                0: {0: {0: 1}, 1: {0: 2}}
+            }
+        )
+
+    def test_multiindex_shape(self):
+        self.assertEquals(index_shape(pd.MultiIndex.from_tuples([(1,0), (1,1), (0,0), (0,1), (0,2)])), (5,))
+        self.assertEquals(index_shape(pd.MultiIndex.from_product([range(4), range(3)])), (4, 3))
+
+        self.assertEquals(index_shape(pd.Index(range(4))), (4, ))
+        self.assertEquals(index_shape(pd.MultiIndex.from_product([range(4), range(3)])), (4, 3))
+        self.assertEquals(index_shape(pd.MultiIndex.from_product([range(4), range(2), range(3)])), (4, 2, 3))
+        self.assertEquals(index_shape(pd.MultiIndex.from_product([range(4), range(2), range(3), range(5)])), (4, 2, 3, 5))
+
+        self.assertEquals(index_shape(pd.Index(range(0))), (0,))
+        self.assertEquals(index_shape(pd.MultiIndex.from_product([[], []])), (0, 0))
+
+        self.assertEquals(index_shape(pd.MultiIndex.from_tuples([(1,0), (1,1), (0,0), (0,1), (0,2)])), (5,))
+        self.assertEquals(index_shape(pd.MultiIndex.from_tuples([(1,0,0), (1,1,0), (0,0,0), (0,1,0), (0,2,0)])), (5,))
+        self.assertEquals(index_shape(pd.MultiIndex.from_tuples([(1,0,0), (1,1,0), (0,0,0), (0,1,0), (0,1,2)])), (5,))
+
+        df = pd.DataFrame({"a": range(4*3*2), "b": range(4*3*2)}, index=pd.MultiIndex.from_product([range(4), range(2), range(3)]))
+        self.assertEquals(index_shape(df), (4, 2, 3))
+        df.values.reshape((4, 3, 2, 2))

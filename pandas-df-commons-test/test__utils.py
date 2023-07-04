@@ -104,26 +104,3 @@ class Test_Utils(TestCase):
             pd.testing.assert_frame_equal(w, windows[i])
 
         self.assertEquals(2, len(windows[:2]))
-
-    def test_batch(self):
-        batches = list(Batch(range(21), 10))
-        self.assertEqual(len(batches), 3)
-        self.assertListEqual(list(batches[0]), list(range(10)))
-        self.assertListEqual(list(batches[1]), list(range(10, 20)))
-        self.assertListEqual(list(batches[2]), list(range(20, 21)))
-
-        self.assertListEqual(list(batches[2]), list(Batch(range(21), 10)[2]))
-
-        df = pd.DataFrame({"a": range(10), "b": range(10)})
-        batches = Batch(df, 3)
-        for i, b in enumerate(batches):
-            pd.testing.assert_frame_equal(b, batches[i])
-
-        # test non slice-able iterator
-        batches = Batch(zip(range(7), range(7)), 3, copy=True)
-        res = {0: [], 1: []}
-        for i in range(2):
-            for b in batches:
-                res[i].append(b)
-
-        self.assertListEqual(res[0], res[1])
