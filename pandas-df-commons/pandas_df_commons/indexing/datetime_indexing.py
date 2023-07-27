@@ -1,6 +1,8 @@
 from datetime import timedelta, datetime, date
 from functools import partial
+from itertools import chain
 
+import numpy as np
 import pandas as pd
 
 
@@ -22,7 +24,7 @@ def forecast_time_index(
 
         forecast_tst.append(tst)
 
-    return pd.DatetimeIndex(forecast_tst, tz=tst.tz)
+    return pd.DatetimeIndex(forecast_tst, tz=tst.tz).sort_values()
 
 
 def extend_time_indexed_dataframe(
@@ -34,16 +36,31 @@ def extend_time_indexed_dataframe(
     assert nr_of_timesteps > 1, f"{nr_of_timesteps} not > 1"
 
     make_index = partial(
-        forecast_time_index, timestep=timestep, only_weekdays=only_weekdays, include_start_date=False
+        forecast_time_index, only_weekdays=only_weekdays
     )
 
     if df.index.nlevels > 1:
+        # create the index at level 0 and get all counts of sub indexes needed
         indexes = df.index[-1]
-        extra_index = pd.MultiIndex.from_product(
-            [make_index(indexes[0], len(df.loc[indexes[l - 1]]) if l > 0 else nr_of_timesteps) for l in range(df.index.nlevels)]
-        )
+        idx_level_0 = make_index(indexes[0], nr_of_timesteps, timestep, include_start_date=False)
+        nr_lvl_timesteps = [len(df.loc[indexes[:l]]) for l in range(1, df.index.nlevels)]
+
+        # construct an index tree
+        idx_at_lvl = [[l] for l in idx_level_0]
+        index_tree = [idx_level_0.tolist()]
+
+        for nr in nr_lvl_timesteps:
+            idx_at_lvl = [make_index(i, nr, -timestep, include_start_date=True).tolist() for j in idx_at_lvl for i in j]
+            index_tree.append(list(chain(*idx_at_lvl)))
+
+        # expand all nodes to have the same length but keep order
+        for i, idx in enumerate(index_tree[:-1]):
+            index_tree[i] = np.sort(idx * int(np.prod(np.array(nr_lvl_timesteps[i-1:]))))
+
+        # create multi index tree
+        extra_index = pd.MultiIndex.from_tuples(zip(*index_tree))
     else:
-        extra_index = make_index(df.index[-1], nr_of_timesteps)
+        extra_index = make_index(df.index[-1], nr_of_timesteps, timestep, include_start_date=False)
 
     res = pd.concat([df, pd.DataFrame({}, index=extra_index)], axis=0, )
     return res
