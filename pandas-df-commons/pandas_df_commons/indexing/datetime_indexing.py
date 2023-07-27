@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from datetime import timedelta, datetime, date
 from functools import partial
 from itertools import chain
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -31,9 +34,10 @@ def extend_time_indexed_dataframe(
         df: pd.DataFrame,
         nr_of_timesteps: int,
         timestep: timedelta = timedelta(days=1),
-        only_weekdays: bool = True
-) -> pd.DataFrame:
-    assert nr_of_timesteps > 1, f"{nr_of_timesteps} not > 1"
+        only_weekdays: bool = True,
+        return_level_counts: bool = False,
+) -> pd.DataFrame | Tuple[pd.DataFrame, List[int]]:
+    assert nr_of_timesteps > 0, f"{nr_of_timesteps} not > 0"
 
     make_index = partial(
         forecast_time_index, only_weekdays=only_weekdays
@@ -60,7 +64,8 @@ def extend_time_indexed_dataframe(
         # create multi index tree
         extra_index = pd.MultiIndex.from_tuples(zip(*index_tree))
     else:
+        nr_lvl_timesteps = []
         extra_index = make_index(df.index[-1], nr_of_timesteps, timestep, include_start_date=False)
 
     res = pd.concat([df, pd.DataFrame({}, index=extra_index)], axis=0, )
-    return res
+    return (res, nr_lvl_timesteps) if return_level_counts else res

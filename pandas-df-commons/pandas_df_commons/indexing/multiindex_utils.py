@@ -152,3 +152,12 @@ def index_shape(df: pd.DataFrame | pd.Index, axis=0) -> Tuple[int, ...]:
             return calc_shape(next_value, shape + (len(next_value),))
 
     return calc_shape(counts, (len(counts), ))
+
+
+def last_index(df: pd.DataFrame | pd.Index, axis=0) -> pd.Index:
+    idx = df if isinstance(df, pd.Index) else (df.index if axis == 0 else df.columns)
+    if idx.nlevels <= 1: return idx
+
+
+    dfi = idx.to_frame()
+    return pd.MultiIndex.from_frame(dfi.groupby(dfi.columns.tolist()[:-1]).last().reset_index())

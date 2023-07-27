@@ -4,7 +4,7 @@ import pandas as pd
 
 from pandas_df_commons.indexing._utils import same_columns_after_level
 from pandas_df_commons.indexing.multiindex_utils import add_to_multi_index, get_top_level_of_multi_index, nth, \
-    index_shape, index_counts
+    index_shape, index_counts, last_index
 
 
 class TestMultiIndexUtils(TestCase):
@@ -107,3 +107,10 @@ class TestMultiIndexUtils(TestCase):
         df = pd.DataFrame({"a": range(4*3*2), "b": range(4*3*2)}, index=pd.MultiIndex.from_product([range(4), range(2), range(3)]))
         self.assertEquals(index_shape(df), (4, 2, 3))
         df.values.reshape((4, 3, 2, 2))
+
+    def test_last_index(self):
+        df = pd.DataFrame({"a": range(24)}, pd.MultiIndex.from_product([range(4), range(3), range(2)]))
+        idx = last_index(df)
+
+        pd.testing.assert_index_equal(idx, pd.MultiIndex.from_product([range(4), range(3), [1]]), check_names=False)
+        self.assertEquals(len(df.loc[idx]), 4 * 3)
