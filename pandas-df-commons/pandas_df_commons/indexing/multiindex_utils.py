@@ -141,7 +141,7 @@ def index_shape(df: pd.DataFrame | pd.Index, axis=0) -> Tuple[int, ...]:
 
 
     if not is_nd(counts.values()):
-        return (len(df), )
+        return (len(idx), )
 
     def calc_shape(counts, shape):
         next_value = next(iter(counts.values()))

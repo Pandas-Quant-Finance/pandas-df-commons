@@ -108,6 +108,12 @@ class TestMultiIndexUtils(TestCase):
         self.assertEquals(index_shape(df), (4, 2, 3))
         df.values.reshape((4, 3, 2, 2))
 
+        df = pd.DataFrame({}, columns=pd.MultiIndex.from_tuples([(1, 1), (1, 2), (2, 1), (2, 2)]))
+        self.assertEquals(index_shape(df, axis=1), (2, 2))
+
+        df = pd.DataFrame({}, columns=pd.MultiIndex.from_tuples([(1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]))
+        self.assertEquals(index_shape(df, axis=1), (5, ))
+
     def test_last_index(self):
         df = pd.DataFrame({"a": range(24)}, pd.MultiIndex.from_product([range(4), range(3), range(2)]))
         idx = last_index(df)
