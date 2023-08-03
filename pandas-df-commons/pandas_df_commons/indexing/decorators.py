@@ -29,7 +29,8 @@ def foreach_column(func):
             results = [func(df[col], *args, **kwargs) for col in df.columns]  # theoretically could be done parallel
             if results[0].ndim > 1 and results[0].shape[1] > 1:
                 for i, col in enumerate(df.columns):
-                    results[i].columns = pd.MultiIndex.from_product([[col], results[i].columns.tolist()])
+                    col = [[df.columns.get_level_values(l)[i]] for l in range(df.columns.nlevels)] if df.columns.nlevels > 1 else [[col]]
+                    results[i].columns = pd.MultiIndex.from_product([*col, results[i].columns.tolist()])
 
             return pd.concat(results, axis=1, join='inner')
         else:

@@ -102,7 +102,7 @@ def nth(df: pd.DataFrame, n: int, include_last: bool = False, level=None, axis=0
     return df.loc[keys[indexes]]
 
 
-def index_counts(df: pd.DataFrame | pd.Index, axis=0) -> dict:
+def     index_counts(df: pd.DataFrame | pd.Index, axis=0) -> dict:
     idx = df if isinstance(df, pd.Index) else (df.index if axis == 0 else df.columns)
     if idx.nlevels <= 1: return {0: len(idx)}
 
@@ -128,7 +128,7 @@ def index_shape(df: pd.DataFrame | pd.Index, axis=0) -> Tuple[int, ...]:
     if idx.nlevels <= 1: return (len(idx), )
     if len(idx) <= 0: return tuple(0 for _ in range(idx.nlevels))
 
-    counts = index_counts(df, axis=axis)
+    counts = index_counts(idx)
 
     def is_nd(values):
         if len(set(len(v) if isinstance(v, defaultdict) else v for v in values)) > 1:

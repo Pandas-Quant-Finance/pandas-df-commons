@@ -100,6 +100,18 @@ class TestDecorators(TestCase):
 
         pd.testing.assert_frame_equal(df, compute(df))
 
+    def test_for_each_column_3lvl(self):
+        keys = ["A", "B", "C"]
+        frames = [_frame(100) for _ in keys]
+        df = pd.concat(frames, axis=1, keys=keys)
+        df = pd.concat([df] * 2, axis=1, keys=["1", "2"])
+
+        @foreach_column
+        def compute(x):
+            return x
+
+        pd.testing.assert_frame_equal(df, compute(df))
+
     def test_only_single_levels(self):
         df = pd.DataFrame({"A": range(10)})
 
