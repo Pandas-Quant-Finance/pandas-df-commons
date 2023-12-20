@@ -7,6 +7,7 @@ from typing import Callable, Tuple
 import numpy as np
 import pandas as pd
 
+from pandas_df_commons.indexing.decorators import foreach_top_level_row
 
 _log = logging.getLogger(__name__)
 _log.debug(f"numpy version {np.__version__}")
@@ -40,6 +41,8 @@ def _extender(df):
         def joint_apply(self, *dfs: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Series], level=None, parallel=False):
             return joint_apply(self.df, *dfs, func=func, level=level, parallel=parallel)
 
+        def for_toplevel_row(self, func: Callable[[pd.DataFrame], pd.DataFrame]) -> pd.DataFrame:
+            return foreach_top_level_row(func)(df)
 
     return Extender(df)
 

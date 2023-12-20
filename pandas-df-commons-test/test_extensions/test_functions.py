@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
+from pandas_df_commons import _extender
 from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply, joint_apply
 
 df = pd.DataFrame({"A": range(1, 11)})
@@ -56,3 +57,8 @@ class TestExtensionFunctions(TestCase):
         res = joint_apply(df1, df2, func=lambda x: x[0].sum() + x[1].sum(), parallel=True)
         self.assertListEqual(res.index.tolist(), list(range(1, 10)))
         self.assertListEqual(res[0].tolist(), [4, 8, 12, 16, 20, 24, 28, 32, 36])
+
+    def test_for_toplevel_row(self):
+        df = pd.concat([pd.DataFrame({"A": range(1, 11)})] * 2, axis=0, keys=[0, 1])
+        res = _extender(df).for_toplevel_row(lambda x: x + 1)
+        pd.testing.assert_frame_equal(res, df + 1)
