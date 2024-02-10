@@ -74,6 +74,7 @@ def foreach_top_level(
 
                 # fix names
                 for _, r in results:
+                    if r.ndim < 2: r = r.to_frame()
                     r.index.name = df.index.name
                     r.columns.name = df.columns.name
 
