@@ -24,8 +24,16 @@ def rescale(df, range: Tuple[float, float], clip=False, axis=None):
         return df.apply(lambda x: ReScaler((x.min(), x.max()), range, clip)(x), axis=axis, result_type='broadcast')
 
 
-def cumpct_change(df):
-    return ((df.pct_change().fillna(0) + 1).cumprod() - 1)
+def row_apply(df, func):
+    return rolling_apply(df, 1, lambda x: func(x.iloc[0]))
+
+
+def p1cumprod(df, **kwargs):
+    return (df + 1).cumprod(**kwargs)
+
+
+def cumpct_change(df, **kwargs):
+    return ((df.pct_change(**kwargs).fillna(0) + 1).cumprod(**kwargs) - 1)
 
 
 def sateful_apply(df, func: Callable[[Any, pd.DataFrame], Tuple[Any, pd.DataFrame]], start_state=None, **kwargs):

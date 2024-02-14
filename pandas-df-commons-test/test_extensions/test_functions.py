@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 
 from pandas_df_commons import _extender
-from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply, joint_apply
+from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply, joint_apply, \
+    p1cumprod, row_apply
 
 df = pd.DataFrame({"A": range(1, 11)})
 
@@ -18,6 +19,26 @@ class TestExtensionFunctions(TestCase):
         np.testing.assert_almost_equal(
             cumapply(df, lambda last, x: (last + x) / 2, 0).values.squeeze(),
             np.arange(0.5, 5.1, 0.5)
+        )
+
+    def test_cumapply_1pcumprod(self):
+        _df = df.copy()
+        _df["B"] = _df["A"]
+
+        np.testing.assert_almost_equal(
+            row_apply(_df, p1cumprod).values,
+            np.array(
+                [[2,  4],
+                 [3,  9],
+                 [4, 16],
+                 [5, 25],
+                 [6, 36],
+                 [7, 49],
+                 [8, 64],
+                 [9, 81],
+                 [10, 100],
+                 [11, 121]]
+            )
         )
 
     def test_rolling_apply(self):

@@ -7,7 +7,8 @@ from typing import Callable, Tuple
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.indexing.decorators import foreach_top_level_row
+from pandas_df_commons.extensions.functions import p1cumprod
+from pandas_df_commons.indexing.decorators import foreach_top_level_row, foreach_top_level_column
 
 _log = logging.getLogger(__name__)
 _log.debug(f"numpy version {np.__version__}")
@@ -29,8 +30,11 @@ def _extender(df):
         def rescale(self, range: Tuple[float, float], clip=False, axis=None):
             return rescale(self.df, range, clip, axis)
 
-        def cumpct_change(self):
-            return cumpct_change(self.df)
+        def p1cumprod(self, **kwargs):
+            return p1cumprod(self.df, **kwargs)
+
+        def cumpct_change(self, **kwargs):
+            return cumpct_change(self.df, **kwargs)
 
         def cumapply(self, func: callable, start_value=None, **kwargs):
             return cumapply(self.df, func, start_value, **kwargs)
@@ -43,6 +47,9 @@ def _extender(df):
 
         def for_toplevel_row(self, func: Callable[[pd.DataFrame], pd.DataFrame]) -> pd.DataFrame:
             return foreach_top_level_row(func)(df)
+
+        def for_toplevel_column(self, func: Callable[[pd.DataFrame], pd.DataFrame]) -> pd.DataFrame:
+            return foreach_top_level_column(func)(df)
 
     return Extender(df)
 
