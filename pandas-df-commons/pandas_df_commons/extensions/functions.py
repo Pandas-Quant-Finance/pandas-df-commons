@@ -40,7 +40,8 @@ def sateful_apply(df, func: Callable[[Any, pd.DataFrame], Tuple[Any, pd.DataFram
     state = [start_state]
 
     def exec(x):
-        state[0], val = func(state[0], x)
+        res = func(state[0], x)
+        state[0], val = res if isinstance(res, tuple) else (res, res)
         return val
 
     return df.apply(exec, **kwargs)
