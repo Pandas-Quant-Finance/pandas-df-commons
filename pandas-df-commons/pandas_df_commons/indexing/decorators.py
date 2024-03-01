@@ -22,24 +22,6 @@ def convert_series_as_data_frame(func):
     return to_dataframe
 
 
-def foreach_column(func):
-    @wraps(func)
-    def exec_on_each_column(df: pd.DataFrame, *args, **kwargs):
-        if df.ndim > 1 and df.shape[1] > 0:
-            results = [func(df[col], *args, **kwargs) for col in df.columns]  # theoretically could be done parallel
-            if results[0].ndim > 1 and results[0].shape[1] > 1:
-                for i, col in enumerate(df.columns):
-                    col = [[df.columns.get_level_values(l)[i]] for l in range(df.columns.nlevels)] if df.columns.nlevels > 1 else [[col]]
-                    results[i].columns = pd.MultiIndex.from_product([*col, results[i].columns.tolist()])
-
-            return pd.concat(results, axis=1, join='inner')
-        else:
-            return func(df, *args, **kwargs)
-
-    return exec_on_each_column
-
-
-
 # Top Level decorator Handling
 def foreach_top_level(
         parallel=False,
@@ -146,3 +128,20 @@ def rename_with_parameters(function_name, parameter_names, output_names=None):
         return wrapper
     return decorator
 
+
+def foreach_column(func):
+    @wraps(func)
+    @foreach_top_level_column
+    def exec_on_each_column(df: pd.DataFrame, *args, **kwargs):
+        if df.ndim > 1 and df.shape[1] > 0:
+            results = [func(df[col], *args, **kwargs) for col in df.columns]  # theoretically could be done parallel
+            if results[0].ndim > 1 and results[0].shape[1] > 1:
+                for i, col in enumerate(df.columns):
+                    col = [[df.columns.get_level_values(l)[i]] for l in range(df.columns.nlevels)] if df.columns.nlevels > 1 else [[col]]
+                    results[i].columns = pd.MultiIndex.from_product([*col, results[i].columns.tolist()])
+
+            return pd.concat(results, axis=1, join='inner')
+        else:
+            return func(df, *args, **kwargs)
+
+    return exec_on_each_column
