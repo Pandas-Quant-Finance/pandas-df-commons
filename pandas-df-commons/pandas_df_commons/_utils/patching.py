@@ -36,6 +36,8 @@ def _add_functions(*modules, filter: Callable[[str, str], str|None]):
 
     class _Patch(object):
 
+        _functions = functions
+
         def __init__(self, df):
             self.df = df
 
