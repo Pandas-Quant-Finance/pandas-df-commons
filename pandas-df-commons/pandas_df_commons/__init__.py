@@ -31,8 +31,8 @@ def _extender(df):
         def rescale(self, range: Tuple[float, float], clip=False, axis=None):
             return rescale(self.df, range, clip, axis)
 
-        def coalesce(self, **kwargs):
-            return coalesce(self, **kwargs)
+        def coalesce(self, *dfs: pd.DataFrame, **kwargs):
+            return coalesce(self, *dfs)
 
         def p1cumprod(self, **kwargs):
             return p1cumprod(self.df, **kwargs)
@@ -73,6 +73,9 @@ def monkey_patch_dataframe(extender='X'):
 
     setattr(PandasObject, extender, property(lambda self: _extender(self)))
     setattr(pd.DataFrame, "to_frame", lambda self: self)
+
+    # patch global functions
+    pd.coalesce = coalesce
 
     #setattr(pd.DataFrame, "flatten_columns", flatten_multi_column_index)
     #setattr(pd.DataFrame, "unique_level_columns", unique_level_columns)
