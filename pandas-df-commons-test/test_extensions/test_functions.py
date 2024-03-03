@@ -5,7 +5,7 @@ import pandas as pd
 
 from pandas_df_commons import _extender
 from pandas_df_commons.extensions.functions import cumpct_change, cumapply, rolling_apply, sateful_apply, joint_apply, \
-    p1cumprod, row_apply
+    p1cumprod, row_apply, coalesce
 
 df = pd.DataFrame({"A": range(1, 11)})
 
@@ -85,3 +85,14 @@ class TestExtensionFunctions(TestCase):
         df = pd.concat([pd.DataFrame({"A": range(1, 11)})] * 2, axis=0, keys=[0, 1])
         res = _extender(df).for_toplevel_row(lambda x: x + 1)
         pd.testing.assert_frame_equal(res, df + 1)
+
+    def test_coalesce(self):
+        df = pd.DataFrame({'a1': [None, 2,    3,    None, None, None],
+                           'a2': [2,    None, 4,    None, None, None],
+                           'a3': [4,    5,    None, None, 9,    None],
+                           'a4': [None, None, None, None, 11,   None],
+                           'b1': [9,    9,    9,    999 , None, None]})
+        np.testing.assert_array_almost_equal(
+            coalesce(df).values,
+            [2., 2., 3., 999., 9., np.nan]
+        )

@@ -82,3 +82,7 @@ def joint_apply(*df: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Seri
         res = [func(w) for w in frames_at_common_index_generator(*df, level=level)]
 
     return pd.DataFrame(res, index=intersection_of_index(*df, level=level))
+
+
+def coalesce(df: pd.DataFrame):
+    return df.bfill(axis=1).iloc[:,0]

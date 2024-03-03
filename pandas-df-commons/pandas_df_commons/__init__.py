@@ -7,7 +7,7 @@ from typing import Callable, Tuple
 import numpy as np
 import pandas as pd
 
-from pandas_df_commons.extensions.functions import p1cumprod
+from pandas_df_commons.extensions.functions import p1cumprod, coalesce
 from pandas_df_commons.indexing.decorators import foreach_top_level_row, foreach_top_level_column
 
 _log = logging.getLogger(__name__)
@@ -30,6 +30,9 @@ def _extender(df):
 
         def rescale(self, range: Tuple[float, float], clip=False, axis=None):
             return rescale(self.df, range, clip, axis)
+
+        def coalesce(self, **kwargs):
+            return coalesce(self, **kwargs)
 
         def p1cumprod(self, **kwargs):
             return p1cumprod(self.df, **kwargs)
