@@ -84,5 +84,5 @@ def joint_apply(*df: pd.DataFrame, func: Callable[[Tuple[pd.DataFrame]], pd.Seri
     return pd.DataFrame(res, index=intersection_of_index(*df, level=level))
 
 
-def coalesce(df: pd.DataFrame):
-    return df.bfill(axis=1).iloc[:,0]
+def coalesce(*df: pd.DataFrame):
+    return pd.concat(df, axis=1).bfill(axis=1).iloc[:,0]
